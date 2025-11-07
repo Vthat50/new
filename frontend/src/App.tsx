@@ -5,7 +5,6 @@ import PatientsTab from './components/tabs/PatientsTab';
 import ConversationsTab from './components/tabs/ConversationsTab';
 import AnalyticsTab from './components/tabs/AnalyticsTab';
 import ConfigurationTab from './components/tabs/ConfigurationTab';
-import DemoModeTab from './components/tabs/DemoModeTab';
 import InstallPrompt from './components/shared/InstallPrompt';
 import OfflineIndicator from './components/shared/OfflineIndicator';
 import DemoControlPanel from './components/demo/DemoControlPanel';
@@ -32,8 +31,6 @@ function App() {
         return <AnalyticsTab />;
       case 'configuration':
         return <ConfigurationTab />;
-      case 'demo':
-        return <DemoModeTab />;
       default:
         return <EnhancedDashboardTab onNavigate={setActiveTab} demoMode={demoMode} />;
     }

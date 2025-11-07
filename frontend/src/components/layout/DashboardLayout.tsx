@@ -51,7 +51,6 @@ export default function DashboardLayout({ children, activeTab, onTabChange, demo
     { id: 'conversations', label: 'Conversations', icon: Phone },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'configuration', label: 'Configuration', icon: Settings },
-    { id: 'demo', label: 'Demo Mode', icon: Rocket },
   ];
 
   const handleTabChange = (tab: string) => {
