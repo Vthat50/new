@@ -380,10 +380,6 @@ function IntegrationManagement() {
   );
 }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 49d399ebc9fd4498f1b9958fb6530b8558bd4946
 // Friction Topics Setup Component
 function FrictionTopicsSetup() {
   const [newTopic, setNewTopic] = useState('');
