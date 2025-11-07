@@ -1,14 +1,52 @@
-from fastapi import FastAPI
+import sys
+import os
 
-# Create a minimal FastAPI app for testing
-app = FastAPI(title="Voice AI Healthcare - Test")
+# Add the backend directory to Python path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'backend'))
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.core.config import settings
+from app.api.routes import patients, calls, analytics, integrations
+
+app = FastAPI(
+    title="Voice AI Healthcare Platform",
+    description="Data-driven intelligence platform for patient engagement",
+    version="1.0.0"
+)
+
+# CORS middleware - Allow all origins for Vercel deployment
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins for now
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include routers
+app.include_router(patients.router)
+app.include_router(calls.router)
+app.include_router(analytics.router)
+app.include_router(integrations.router)
+
 
 @app.get("/")
 def root():
-    return {"message": "FastAPI on Vercel is working!", "status": "ok"}
+    return {
+        "message": "Voice AI Healthcare Platform API on Vercel",
+        "version": "1.0.0",
+        "status": "running",
+        "platform": "vercel"
+    }
+
 
 @app.get("/health")
-def health():
+def health_check():
     return {"status": "healthy", "platform": "vercel"}
 
-# Vercel automatically detects FastAPI as ASGI application
+
+@app.get("/api/health")
+def api_health_check():
+    """Health check endpoint at /api/health"""
+    return {"status": "healthy", "platform": "vercel", "path": "/api/health"}

@@ -380,66 +380,6 @@ function IntegrationManagement() {
   );
 }
 
-// Workflow Builder Component
-function WorkflowBuilder() {
-  return (
-    <Card>
-      <CardContent style={{ padding: spacing[8] }}>
-        <div className="text-center">
-          <div
-            className="mx-auto rounded-full flex items-center justify-center"
-            style={{
-              width: '80px',
-              height: '80px',
-              backgroundColor: colors.primary[100],
-              marginBottom: spacing[4]
-            }}
-          >
-            <GitBranch style={{ width: '40px', height: '40px', color: colors.primary[600] }} />
-          </div>
-          <h3 style={{ fontSize: typography.fontSize['2xl'], fontWeight: typography.fontWeight.semibold, marginBottom: spacing[2] }}>
-            Visual Workflow Builder
-          </h3>
-          <p style={{ fontSize: typography.fontSize.base, color: colors.neutral[600], marginBottom: spacing[6], maxWidth: '600px', margin: '0 auto' }}>
-            Drag-and-drop interface for building conversation flows, decision trees, and automation workflows. Coming soon in the next release.
-          </p>
-          <div className="flex justify-center" style={{ gap: spacing[3] }}>
-            <Button variant="primary">
-              <Plus style={{ width: '16px', height: '16px', marginRight: spacing[2] }} />
-              Create New Workflow
-            </Button>
-            <Button variant="secondary">View Templates</Button>
-          </div>
-
-          {/* Placeholder visualization */}
-          <div
-            className="rounded-lg border-2 border-dashed mt-8"
-            style={{
-              padding: spacing[8],
-              borderColor: colors.neutral[300],
-              backgroundColor: colors.neutral[50]
-            }}
-          >
-            <div className="flex items-center justify-center" style={{ gap: spacing[4] }}>
-              <div className="rounded-lg border-2" style={{ padding: spacing[4], borderColor: colors.primary[500], backgroundColor: 'white' }}>
-                <div style={{ fontSize: typography.fontSize.sm, fontWeight: typography.fontWeight.semibold }}>Start Call</div>
-              </div>
-              <div style={{ fontSize: typography.fontSize['2xl'], color: colors.neutral[400] }}>→</div>
-              <div className="rounded-lg border-2" style={{ padding: spacing[4], borderColor: colors.neutral[300], backgroundColor: 'white' }}>
-                <div style={{ fontSize: typography.fontSize.sm }}>Verify Patient</div>
-              </div>
-              <div style={{ fontSize: typography.fontSize['2xl'], color: colors.neutral[400] }}>→</div>
-              <div className="rounded-lg border-2" style={{ padding: spacing[4], borderColor: colors.neutral[300], backgroundColor: 'white' }}>
-                <div style={{ fontSize: typography.fontSize.sm }}>Check Eligibility</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
 // Friction Topics Setup Component
 function FrictionTopicsSetup() {
   const [newTopic, setNewTopic] = useState('');

@@ -391,12 +391,26 @@ const PatientsTab: React.FC<PatientsTabProps> = ({ demoMode = false }) => {
                       return (
                         <tr
                           key={patient.id}
-                          onClick={() => setSelectedPatientId(patient.id)}
+                          onClick={(e) => {
+                            console.log('=== ROW CLICKED ===');
+                            console.log('Patient ID:', patient.id);
+                            console.log('Patient Name:', patient.first_name, patient.last_name);
+                            console.log('Event target:', e.target);
+                            console.log('Current selectedPatientId:', selectedPatientId);
+                            setSelectedPatientId(patient.id);
+                            console.log('Set selectedPatientId to:', patient.id);
+                          }}
                           style={{
                             borderBottom: `1px solid ${colors.neutral[200]}`,
                             cursor: 'pointer',
+                            backgroundColor: 'transparent',
                           }}
-                          className="hover:bg-neutral-50"
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = colors.neutral[50];
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                          }}
                         >
                           <td style={{ padding: spacing[3] }}>
                             <input
@@ -476,17 +490,22 @@ const PatientsTab: React.FC<PatientsTabProps> = ({ demoMode = false }) => {
                             </td>
                           )}
                           {visibleColumns.includes('actions') && (
-                            <td style={{ padding: spacing[3] }}>
-                              <AINextAction
-                                patientId={patient.id}
-                                patientData={{
-                                  sdohRisk: patient.sdoh_risk_score,
-                                  journeyStage: patient.journey_stage,
-                                  adherence: patient.adherence_score,
-                                  lastContact: patient.last_contact_date,
-                                }}
-                                compact={true}
-                              />
+                            <td style={{ padding: spacing[3] }} onClick={(e) => e.stopPropagation()}>
+                              <div style={{ display: 'flex', gap: spacing[2], alignItems: 'center' }}>
+                                <AINextAction
+                                  patientId={patient.id}
+                                  patientData={{
+                                    sdohRisk: patient.sdoh_risk_score,
+                                    journeyStage: patient.journey_stage,
+                                    adherence: patient.adherence_score,
+                                    lastContact: patient.last_contact_date,
+                                  }}
+                                  compact={true}
+                                  onActionClick={() => {
+                                    setSelectedPatientId(patient.id);
+                                  }}
+                                />
+                              </div>
                             </td>
                           )}
                         </tr>
@@ -515,10 +534,16 @@ const PatientsTab: React.FC<PatientsTabProps> = ({ demoMode = false }) => {
 
       {/* Patient Detail Modal */}
       {selectedPatientId && (
-        <EnhancedPatientDetailModal
-          patientId={selectedPatientId}
-          onClose={() => setSelectedPatientId(null)}
-        />
+        <>
+          {console.log('=== RENDERING MODAL ===', 'patientId:', selectedPatientId)}
+          <EnhancedPatientDetailModal
+            patientId={selectedPatientId}
+            onClose={() => {
+              console.log('=== CLOSING MODAL ===');
+              setSelectedPatientId(null);
+            }}
+          />
+        </>
       )}
 
       {/* ALL Additional Patient Component Modals */}
@@ -663,23 +688,6 @@ const PatientsTab: React.FC<PatientsTabProps> = ({ demoMode = false }) => {
         </PrintView>
       )}
 
-      {/* Breadcrumbs */}
-      <div style={{ position: 'fixed', top: spacing[4], left: spacing[6], zIndex: 100 }}>
-        <Breadcrumbs
-          items={[
-            { label: 'Home', path: '/' },
-            { label: 'Patients', path: '/patients' },
-          ]}
-        />
-      </div>
-
-      {/* Recently Viewed */}
-      <div style={{ position: 'fixed', bottom: spacing[4], right: spacing[4], zIndex: 100 }}>
-        <RecentlyViewed
-          items={[]}
-          onItemClick={(item) => setSelectedPatientId(item.id)}
-        />
-      </div>
 
       {/* Notification Center */}
       <NotificationCenter
@@ -695,7 +703,7 @@ const PatientsTab: React.FC<PatientsTabProps> = ({ demoMode = false }) => {
         ]}
         onMarkAsRead={() => {}}
         onMarkAllAsRead={() => {}}
-        onClear={() => {}}
+        onDismiss={() => {}}
       />
     </UndoRedoProvider>
   );

@@ -11,9 +11,10 @@ interface AINextActionProps {
     lastContact: string;
   };
   compact?: boolean;
+  onActionClick?: () => void;
 }
 
-export default function AINextAction({ patientId, patientData, compact = false }: AINextActionProps) {
+export default function AINextAction({ patientId, patientData, compact = false, onActionClick }: AINextActionProps) {
   // AI-driven action recommendation based on patient data
   const getRecommendedAction = () => {
     const { sdohRisk, journeyStage, adherence, lastContact } = patientData;
@@ -60,8 +61,35 @@ export default function AINextAction({ patientId, patientData, compact = false }
     low: colors.neutral[500],
   };
 
+  const priorityBgColors = {
+    high: colors.status.errorBg,
+    medium: colors.primary[50],
+    low: colors.neutral[50],
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onActionClick) {
+      onActionClick();
+    }
+  };
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
+    <button
+      onClick={handleClick}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: spacing[2],
+        padding: `${spacing[1]} ${spacing[3]}`,
+        borderRadius: '6px',
+        border: `1px solid ${priorityColors[priority]}`,
+        backgroundColor: priorityBgColors[priority],
+        cursor: 'pointer',
+        transition: 'all 0.2s',
+      }}
+      className="hover:shadow-sm"
+    >
       <Sparkles
         style={{
           width: '14px',
@@ -74,6 +102,7 @@ export default function AINextAction({ patientId, patientData, compact = false }
         style={{
           fontSize: typography.fontSize.xs,
           color: colors.neutral[700],
+          fontWeight: typography.fontWeight.medium,
         }}
       >
         {action}
@@ -85,6 +114,6 @@ export default function AINextAction({ patientId, patientData, compact = false }
           50% { opacity: 0.5; transform: scale(1.2); }
         }
       `}</style>
-    </div>
+    </button>
   );
 }
