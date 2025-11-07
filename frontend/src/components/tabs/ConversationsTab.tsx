@@ -29,7 +29,7 @@ import TranscriptBottomPanel from '../conversations/TranscriptBottomPanel';
 import EndCallModal from '../conversations/EndCallModal';
 import TakeOverModal from '../conversations/TakeOverModal';
 
-type TabType = 'active' | 'history' | 'transcript' | 'analytics';
+type TabType = 'active' | 'history' | 'analytics';
 
 export default function ConversationsTab() {
   const [activeTab, setActiveTab] = useState<TabType>('active');
@@ -899,69 +899,6 @@ export default function ConversationsTab() {
     );
   };
 
-  const renderTranscriptTab = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Transcript Panel */}
-      <div className="lg:col-span-2">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-neutral-900" style={{ fontSize: typography.fontSize.lg, fontWeight: typography.fontWeight.semibold }}>
-                  Call Transcript
-                </h2>
-                <p className="text-neutral-500" style={{ fontSize: typography.fontSize.xs }}>
-                  Sarah Martinez • Nov 6, 2024 10:30 AM • 8:42
-                </p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {/* Live Transcript Component */}
-            <LiveTranscript
-              segments={liveTranscript.segments}
-              isLive={liveTranscript.isLive}
-              onSegmentClick={(segment) => console.log('Segment clicked:', segment)}
-            />
-
-            {/* Compliance Scorecard */}
-            <div style={{ marginTop: spacing[6] }}>
-              <ComplianceScorecard
-                checks={complianceChecks}
-                overallScore={95}
-                callId="1"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Transcript Bottom Panel */}
-        <div style={{ marginTop: spacing[4] }}>
-          <TranscriptBottomPanel
-            callId="demo-call-1"
-            summary="Patient called regarding their medication refill. Confirmed insurance coverage and pharmacy details. Discussed potential side effects and adherence support."
-            actions={[
-              { id: '1', description: 'Verify insurance coverage', status: 'completed' as const, timestamp: Date.now() / 1000 - 3600 },
-              { id: '2', description: 'Send refill authorization to pharmacy', status: 'completed' as const, timestamp: Date.now() / 1000 - 1800 },
-              { id: '3', description: 'Schedule follow-up call', status: 'pending' as const, timestamp: Date.now() / 1000 },
-            ]}
-            followUps={[
-              { id: '1', type: 'call' as const, description: 'Follow-up on medication adherence', dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), assignedTo: 'Care Team', priority: 'medium' as const },
-              { id: '2', type: 'email' as const, description: 'Send medication guide and resources', dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), assignedTo: 'Support Team', priority: 'low' as const },
-            ]}
-          />
-        </div>
-      </div>
-
-      {/* Key Moments Sidebar */}
-      <div className="lg:col-span-1">
-        <KeyMomentsSidebar
-          moments={keyMoments}
-          onMomentClick={(moment) => console.log('Moment clicked:', moment)}
-        />
-      </div>
-    </div>
-  );
 
   return (
     <div style={{ padding: spacing[6], backgroundColor: colors.background.page, display: 'flex', flexDirection: 'column', gap: spacing[6] }}>
@@ -980,8 +917,7 @@ export default function ConversationsTab() {
         <div className="flex" style={{ gap: spacing[2] }}>
           {[
             { id: 'active' as TabType, label: 'Active Calls', badge: activeCalls.length },
-            { id: 'history' as TabType, label: 'Call History' },
-            { id: 'transcript' as TabType, label: 'Transcript Viewer' },
+            { id: 'history' as TabType, label: 'Call History & Transcripts' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -1017,7 +953,6 @@ export default function ConversationsTab() {
       {/* Tab Content */}
       {activeTab === 'active' && renderActiveCallsTab()}
       {activeTab === 'history' && renderCallHistoryTab()}
-      {activeTab === 'transcript' && renderTranscriptTab()}
 
       {/* ALL Missing Conversation Modals */}
       {showEndCallModal && (
