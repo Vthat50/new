@@ -77,3 +77,99 @@ export default function DemoModeTab() {
     </div>
   );
 }
+<<<<<<< HEAD
+=======
+
+
+
+// Sample Data Generator Component
+function SampleDataGenerator() {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <h3 style={{ fontSize: typography.fontSize.lg, fontWeight: typography.fontWeight.semibold }}>
+            Generate Sample Patients
+          </h3>
+        </CardHeader>
+        <CardContent>
+          <p style={{ fontSize: typography.fontSize.sm, color: colors.neutral[600], marginBottom: spacing[4] }}>
+            Create realistic patient data for demonstration purposes
+          </p>
+          <div className="grid grid-cols-3 gap-4">
+            <Button variant="primary">Generate 50 Patients</Button>
+            <Button variant="primary">Generate 200 Patients</Button>
+            <Button variant="primary">Generate 500 Patients</Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <h3 style={{ fontSize: typography.fontSize.lg, fontWeight: typography.fontWeight.semibold }}>
+            Generate Call History
+          </h3>
+        </CardHeader>
+        <CardContent>
+          <p style={{ fontSize: typography.fontSize.sm, color: colors.neutral[600], marginBottom: spacing[4] }}>
+            Create conversation history with realistic transcripts and outcomes
+          </p>
+          <div className="grid grid-cols-3 gap-4">
+            <Button variant="secondary">7 Days of Calls</Button>
+            <Button variant="secondary">30 Days of Calls</Button>
+            <Button variant="secondary">90 Days of Calls</Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <h3 style={{ fontSize: typography.fontSize.lg, fontWeight: typography.fontWeight.semibold }}>
+            Clear Demo Data
+          </h3>
+        </CardHeader>
+        <CardContent>
+          <p style={{ fontSize: typography.fontSize.sm, color: colors.neutral[600], marginBottom: spacing[4] }}>
+            Reset the database and remove all sample data
+          </p>
+          <Button variant="secondary" style={{ color: colors.status.error, borderColor: colors.status.error }}>
+            Clear All Data
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* ALL Demo Component Sections */}
+      {activeSection === 'roi' && (
+        <div style={{ marginTop: spacing[6] }}>
+          <ROICalculator />
+        </div>
+      )}
+
+      {activeSection === 'generator' && (
+        <div style={{ marginTop: spacing[6] }}>
+          <DataGenerator
+            onGenerate={(data) => console.log('Generated data:', data)}
+          />
+        </div>
+      )}
+
+      {showGuidedTour && (
+        <GuidedTour
+          onComplete={() => setShowGuidedTour(false)}
+          onSkip={() => setShowGuidedTour(false)}
+        />
+      )}
+
+      {showScenarioBuilder && (
+        <ScenarioBuilder
+          onSave={(scenario) => {
+            console.log('Scenario saved:', scenario);
+            setShowScenarioBuilder(false);
+          }}
+          onClose={() => setShowScenarioBuilder(false)}
+        />
+      )}
+    </div>
+  );
+}
+>>>>>>> 49d399ebc9fd4498f1b9958fb6530b8558bd4946
