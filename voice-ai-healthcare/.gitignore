@@ -51,3 +51,4 @@ data/uploads/*
 build/
 *.egg-info/
 .pytest_cache/
+.vercel
