@@ -18,7 +18,13 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
 
     # CORS
-    CORS_ORIGINS: list = ["http://localhost:5173", "http://localhost:3000"]
+    CORS_ORIGINS: list = [
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "https://voice-ai-healthcare-k2b6290si-vthatte1-5467s-projects.vercel.app",
+        "https://voice-ai-healthcare.vercel.app",
+        "https://*.vercel.app"
+    ]
 
     class Config:
         env_file = ".env"
