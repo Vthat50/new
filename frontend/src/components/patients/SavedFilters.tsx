@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Filter, Star, Trash2, Plus, Edit2 } from 'lucide-react';
 import { colors, spacing, typography } from '../../lib/design-system';
+// Fixed: Added defensive checks for all array operations
 
 interface SavedFilter {
   id: string;
@@ -34,14 +35,23 @@ export default function SavedFilters({ onFilterSelect, currentFilters, onSave }:
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        const filters = parsed.map((filter: any) => ({
-          ...filter,
-          createdAt: new Date(filter.createdAt),
-        }));
-        setSavedFilters(filters);
+        // Ensure parsed is an array
+        if (Array.isArray(parsed)) {
+          const filters = parsed.map((filter: any) => ({
+            ...filter,
+            createdAt: new Date(filter.createdAt),
+          }));
+          setSavedFilters(filters);
+        } else {
+          console.warn('Stored filters is not an array, resetting to empty');
+          setSavedFilters([]);
+          localStorage.removeItem(STORAGE_KEY);
+        }
       }
     } catch (error) {
       console.error('Failed to load saved filters:', error);
+      setSavedFilters([]);
+      localStorage.removeItem(STORAGE_KEY);
     }
   };
 
@@ -56,11 +66,14 @@ export default function SavedFilters({ onFilterSelect, currentFilters, onSave }:
       createdAt: new Date(),
     };
 
+    // Ensure savedFilters is an array
+    const safeFilters = Array.isArray(savedFilters) ? savedFilters : [];
+
     let updated;
     if (editingId) {
-      updated = savedFilters.map((f) => (f.id === editingId ? newFilter : f));
+      updated = safeFilters.map((f) => (f.id === editingId ? newFilter : f));
     } else {
-      updated = [...savedFilters, newFilter];
+      updated = [...safeFilters, newFilter];
     }
 
     setSavedFilters(updated);
@@ -73,6 +86,7 @@ export default function SavedFilters({ onFilterSelect, currentFilters, onSave }:
   };
 
   const handleToggleFavorite = (id: string) => {
+    if (!Array.isArray(savedFilters)) return;
     const updated = savedFilters.map((filter) =>
       filter.id === id ? { ...filter, isFavorite: !filter.isFavorite } : filter
     );
@@ -81,6 +95,7 @@ export default function SavedFilters({ onFilterSelect, currentFilters, onSave }:
   };
 
   const handleDelete = (id: string) => {
+    if (!Array.isArray(savedFilters)) return;
     const updated = savedFilters.filter((filter) => filter.id !== id);
     setSavedFilters(updated);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
@@ -92,12 +107,19 @@ export default function SavedFilters({ onFilterSelect, currentFilters, onSave }:
     setIsModalOpen(true);
   };
 
-  const sortedFilters = [...savedFilters].sort((a, b) => {
+  const sortedFilters = (Array.isArray(savedFilters) ? [...savedFilters] : []).sort((a, b) => {
     if (a.isFavorite !== b.isFavorite) return a.isFavorite ? -1 : 1;
-    return b.createdAt.getTime() - a.createdAt.getTime();
+    // Safely handle Date comparison
+    try {
+      const aTime = a.createdAt instanceof Date ? a.createdAt.getTime() : 0;
+      const bTime = b.createdAt instanceof Date ? b.createdAt.getTime() : 0;
+      return bTime - aTime;
+    } catch (error) {
+      return 0;
+    }
   });
 
-  const favoriteFilters = sortedFilters.filter((f) => f.isFavorite);
+  const favoriteFilters = Array.isArray(sortedFilters) ? sortedFilters.filter((f) => f.isFavorite) : [];
 
   return (
     <>

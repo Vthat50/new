@@ -13,13 +13,22 @@ import { colors, spacing, typography } from '../../lib/design-system';
 import { Card, CardHeader, CardContent } from '../shared/Card';
 import Button from '../shared/Button';
 
+// Import ALL demo components
+import DataGenerator from '../demo/DataGenerator';
+import GuidedTour from '../demo/GuidedTour';
+import ROICalculator from '../demo/ROICalculator';
+import ScenarioBuilder from '../demo/ScenarioBuilder';
+
 export default function DemoModeTab() {
   const [activeSection, setActiveSection] = useState('roi');
+  const [showGuidedTour, setShowGuidedTour] = useState(false);
+  const [showScenarioBuilder, setShowScenarioBuilder] = useState(false);
 
   const sections = [
     { id: 'roi', label: 'ROI Calculator', icon: DollarSign },
     { id: 'tour', label: 'Guided Tour', icon: Book },
     { id: 'generator', label: 'Sample Data', icon: Rocket },
+    { id: 'scenarios', label: 'Scenario Builder', icon: Play },
   ];
 
   return (
@@ -480,6 +489,38 @@ function SampleDataGenerator() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* ALL Demo Component Sections */}
+      {activeSection === 'roi' && (
+        <div style={{ marginTop: spacing[6] }}>
+          <ROICalculator />
+        </div>
+      )}
+
+      {activeSection === 'generator' && (
+        <div style={{ marginTop: spacing[6] }}>
+          <DataGenerator
+            onGenerate={(data) => console.log('Generated data:', data)}
+          />
+        </div>
+      )}
+
+      {showGuidedTour && (
+        <GuidedTour
+          onComplete={() => setShowGuidedTour(false)}
+          onSkip={() => setShowGuidedTour(false)}
+        />
+      )}
+
+      {showScenarioBuilder && (
+        <ScenarioBuilder
+          onSave={(scenario) => {
+            console.log('Scenario saved:', scenario);
+            setShowScenarioBuilder(false);
+          }}
+          onClose={() => setShowScenarioBuilder(false)}
+        />
+      )}
     </div>
   );
 }

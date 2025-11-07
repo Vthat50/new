@@ -6,12 +6,12 @@ import ConversationsTab from './components/tabs/ConversationsTab';
 import AnalyticsTab from './components/tabs/AnalyticsTab';
 import ConfigurationTab from './components/tabs/ConfigurationTab';
 import DemoModeTab from './components/tabs/DemoModeTab';
-import ComponentsShowcaseTab from './components/tabs/ComponentsShowcaseTab';
 import InstallPrompt from './components/shared/InstallPrompt';
 import OfflineIndicator from './components/shared/OfflineIndicator';
 import DemoControlPanel from './components/demo/DemoControlPanel';
 import LiveNotifications from './components/shared/LiveNotifications';
 import { useRealtimeService } from './hooks/useRealtimeUpdates';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
@@ -34,15 +34,13 @@ function App() {
         return <ConfigurationTab />;
       case 'demo':
         return <DemoModeTab />;
-      case 'components-showcase':
-        return <ComponentsShowcaseTab />;
       default:
         return <EnhancedDashboardTab onNavigate={setActiveTab} demoMode={demoMode} />;
     }
   };
 
   return (
-    <>
+    <ErrorBoundary>
       <OfflineIndicator />
       <DashboardLayout
         activeTab={activeTab}
@@ -55,7 +53,7 @@ function App() {
       <InstallPrompt />
       {demoMode && <DemoControlPanel />}
       {demoMode && <LiveNotifications />}
-    </>
+    </ErrorBoundary>
   );
 }
 

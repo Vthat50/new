@@ -27,6 +27,7 @@ interface SDOHBadgesProps {
   overallRisk?: 'low' | 'medium' | 'high';
   size?: 'small' | 'medium' | 'large';
   showTooltips?: boolean;
+  compact?: boolean;
 }
 
 type SDOHFactor = {
@@ -43,6 +44,7 @@ export default function SDOHBadges({
   overallRisk = 'medium',
   size = 'medium',
   showTooltips = true,
+  compact = false,
 }: SDOHBadgesProps) {
   const sizeMap = {
     small: { badge: spacing[1], icon: '12px', font: typography.fontSize.xs },
@@ -194,6 +196,31 @@ export default function SDOHBadges({
   }
 
   const highRiskCount = factors.filter((f) => f.risk === 'high').length;
+
+  // Compact mode: Just show risk level badge
+  if (compact) {
+    return (
+      <div
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: spacing[1],
+          padding: `${spacing[1]} ${spacing[2]}`,
+          backgroundColor: getRiskColor(overallRisk).bg,
+          border: `1px solid ${getRiskColor(overallRisk).border}`,
+          borderRadius: '4px',
+          fontSize: typography.fontSize.xs,
+          fontWeight: typography.fontWeight.medium,
+          color: getRiskColor(overallRisk).text,
+        }}
+        title={`${overallRisk.toUpperCase()} SDOH Risk${highRiskCount > 0 ? ` (${highRiskCount} high-risk factor${highRiskCount !== 1 ? 's' : ''})` : ''}`}
+      >
+        <AlertTriangle style={{ width: '12px', height: '12px' }} />
+        {overallRisk.toUpperCase()}
+        {highRiskCount > 0 && <span style={{ opacity: 0.8 }}>({highRiskCount})</span>}
+      </div>
+    );
+  }
 
   return (
     <div>

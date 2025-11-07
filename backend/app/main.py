@@ -1,12 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.core.database import engine, init_db
+from app.core.database import engine
 from app.models import *  # Import all models to register them
 from app.api.routes import patients, calls, analytics, integrations
-
-# Create database tables
-init_db()
 
 app = FastAPI(
     title="Voice AI Healthcare Platform",

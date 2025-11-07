@@ -17,6 +17,12 @@ import { colors, spacing, typography } from '../../lib/design-system';
 import { Card, CardHeader, CardContent } from '../shared/Card';
 import Button from '../shared/Button';
 
+// Import ALL configuration components
+import VoiceSettings from '../config/VoiceSettings';
+import IntegrationPanel from '../config/IntegrationPanel';
+import FieldMapping from '../config/FieldMapping';
+import WorkflowBuilder from '../config/WorkflowBuilder';
+
 export default function ConfigurationTab() {
   const [activeSubTab, setActiveSubTab] = useState('voice');
 

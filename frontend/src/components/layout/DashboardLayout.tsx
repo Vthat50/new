@@ -12,7 +12,6 @@ import {
   User,
   LogOut,
   HelpCircle,
-  Package,
 } from 'lucide-react';
 import { colors, spacing, typography, layout } from '../../lib/design-system';
 
@@ -52,7 +51,6 @@ export default function DashboardLayout({ children, activeTab, onTabChange, demo
     { id: 'conversations', label: 'Conversations', icon: Phone },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'configuration', label: 'Configuration', icon: Settings },
-    { id: 'components-showcase', label: 'Components', icon: Package },
     { id: 'demo', label: 'Demo Mode', icon: Rocket },
   ];
 

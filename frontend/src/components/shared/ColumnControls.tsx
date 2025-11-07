@@ -16,7 +16,7 @@ interface ColumnControlsProps {
 
 export default function ColumnControls({ columns: initialColumns, onChange }: ColumnControlsProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [columns, setColumns] = useState(initialColumns);
+  const [columns, setColumns] = useState(initialColumns || []);
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
 
   const toggleColumn = (columnId: string) => {
@@ -66,7 +66,7 @@ export default function ColumnControls({ columns: initialColumns, onChange }: Co
   };
 
   const resetToDefault = () => {
-    const updated = initialColumns.map((col) => ({ ...col }));
+    const updated = (initialColumns || []).map((col) => ({ ...col }));
     setColumns(updated);
     onChange(updated);
   };

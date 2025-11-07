@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { X, ChevronDown, ChevronUp } from 'lucide-react';
 import { colors, spacing, typography } from '../../lib/design-system';
+// Fixed: Props interface mismatch causing undefined filter arrays
 
 interface FilterSidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onApply: (filters: any) => void;
+  filters: any;
+  onFilterChange: (filters: any) => void;
+  onSave: () => void;
+  onReset: () => void;
 }
 
 interface FilterState {
@@ -21,7 +23,8 @@ interface FilterState {
   customEndDate: string;
 }
 
-export default function FilterSidebar({ isOpen, onClose, onApply }: FilterSidebarProps) {
+export default function FilterSidebar({ filters: externalFilters, onFilterChange, onSave, onReset }: FilterSidebarProps) {
+  // Initialize with safe empty defaults - ALWAYS use arrays, never undefined
   const [filters, setFilters] = useState<FilterState>({
     journeyStages: [],
     riskLevel: 'all',

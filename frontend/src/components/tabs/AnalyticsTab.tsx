@@ -19,12 +19,34 @@ import { colors, spacing, typography } from '../../lib/design-system';
 import { Card, CardHeader, CardContent } from '../shared/Card';
 import InteractiveUSMap from '../shared/InteractiveUSMap';
 
+// Import ALL analytics components
+import FrictionHeatmap from '../analytics/FrictionHeatmap';
+import WidgetSystem from '../analytics/WidgetSystem';
+import LeaderboardWidget from '../analytics/LeaderboardWidget';
+import GaugeChart from '../analytics/GaugeChart';
+import DonutChart from '../analytics/DonutChart';
+import HourlyHeatmap from '../analytics/HourlyHeatmap';
+import CustomMetricBuilder from '../analytics/CustomMetricBuilder';
+import InsuranceAnalyticsTab from '../analytics/InsuranceAnalyticsTab';
+import SavedLayouts from '../analytics/SavedLayouts';
+import ShareVisualization from '../analytics/ShareVisualization';
+import WidgetExport from '../analytics/WidgetExport';
+import WidgetLibrary from '../analytics/WidgetLibrary';
+
 type TabType = 'performance' | 'friction' | 'geographic' | 'chatbot';
 
 export default function AnalyticsTab() {
   const [activeTab, setActiveTab] = useState<TabType>('performance');
   const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'assistant', content: string }>>([]);
   const [chatInput, setChatInput] = useState('');
+
+  // State for all analytics modals
+  const [showCustomMetricBuilder, setShowCustomMetricBuilder] = useState(false);
+  const [showInsuranceAnalytics, setShowInsuranceAnalytics] = useState(false);
+  const [showSavedLayouts, setShowSavedLayouts] = useState(false);
+  const [showShareVisualization, setShowShareVisualization] = useState(false);
+  const [showWidgetExport, setShowWidgetExport] = useState(false);
+  const [showWidgetLibrary, setShowWidgetLibrary] = useState(false);
 
   // Performance metrics
   const kpiMetrics = [
@@ -778,6 +800,66 @@ export default function AnalyticsTab() {
       {activeTab === 'friction' && renderFrictionTab()}
       {activeTab === 'geographic' && renderGeographicTab()}
       {activeTab === 'chatbot' && renderChatbotTab()}
+
+      {/* ALL Missing Analytics Components */}
+      {showCustomMetricBuilder && (
+        <CustomMetricBuilder
+          onSave={(metric) => {
+            console.log('Custom metric saved:', metric);
+            setShowCustomMetricBuilder(false);
+          }}
+          onClose={() => setShowCustomMetricBuilder(false)}
+        />
+      )}
+
+      {showInsuranceAnalytics && (
+        <InsuranceAnalyticsTab
+          onClose={() => setShowInsuranceAnalytics(false)}
+        />
+      )}
+
+      {showSavedLayouts && (
+        <SavedLayouts
+          layouts={[]}
+          onLoad={(layout) => {
+            console.log('Layout loaded:', layout);
+            setShowSavedLayouts(false);
+          }}
+          onDelete={(id) => console.log('Layout deleted:', id)}
+        />
+      )}
+
+      {showShareVisualization && (
+        <ShareVisualization
+          visualizationId="viz-1"
+          onShare={(method) => {
+            console.log('Shared via:', method);
+            setShowShareVisualization(false);
+          }}
+          onClose={() => setShowShareVisualization(false)}
+        />
+      )}
+
+      {showWidgetExport && (
+        <WidgetExport
+          widgetId="widget-1"
+          onExport={(format) => {
+            console.log('Exported as:', format);
+            setShowWidgetExport(false);
+          }}
+          onClose={() => setShowWidgetExport(false)}
+        />
+      )}
+
+      {showWidgetLibrary && (
+        <WidgetLibrary
+          onSelectWidget={(widget) => {
+            console.log('Widget selected:', widget);
+            setShowWidgetLibrary(false);
+          }}
+          onClose={() => setShowWidgetLibrary(false)}
+        />
+      )}
     </div>
   );
 }
