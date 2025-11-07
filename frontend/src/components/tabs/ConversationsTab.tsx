@@ -571,9 +571,10 @@ export default function ConversationsTab() {
               {/* Transcript Bottom Panel */}
               <div style={{ marginTop: spacing[4] }}>
                 <TranscriptBottomPanel
-                  onExport={() => console.log('Export transcript')}
-                  onShare={() => console.log('Share transcript')}
-                  onAddNote={() => console.log('Add note')}
+                  callId={call.id}
+                  summary={call.summary}
+                  actions={call.actions}
+                  followUps={call.followUps}
                 />
               </div>
             </div>
@@ -937,9 +938,17 @@ export default function ConversationsTab() {
         {/* Transcript Bottom Panel */}
         <div style={{ marginTop: spacing[4] }}>
           <TranscriptBottomPanel
-            onExport={() => console.log('Export transcript')}
-            onShare={() => console.log('Share transcript')}
-            onAddNote={() => console.log('Add note')}
+            callId="demo-call-1"
+            summary="Patient called regarding their medication refill. Confirmed insurance coverage and pharmacy details. Discussed potential side effects and adherence support."
+            actions={[
+              { id: '1', description: 'Verify insurance coverage', status: 'completed' as const, timestamp: Date.now() / 1000 - 3600 },
+              { id: '2', description: 'Send refill authorization to pharmacy', status: 'completed' as const, timestamp: Date.now() / 1000 - 1800 },
+              { id: '3', description: 'Schedule follow-up call', status: 'pending' as const, timestamp: Date.now() / 1000 },
+            ]}
+            followUps={[
+              { id: '1', type: 'call' as const, description: 'Follow-up on medication adherence', dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), assignedTo: 'Care Team', priority: 'medium' as const },
+              { id: '2', type: 'email' as const, description: 'Send medication guide and resources', dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), assignedTo: 'Support Team', priority: 'low' as const },
+            ]}
           />
         </div>
       </div>
