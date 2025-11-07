@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { getPatient } from '../../services/api';
+import React, { useState, useMemo } from 'react';
+import { mockPatients } from '../../data/mockPatients';
 import { Card, CardHeader, CardContent } from '../shared/Card';
 import Badge from '../shared/Badge';
 import Button from '../shared/Button';
@@ -33,22 +32,15 @@ interface EnhancedPatientDetailModalProps {
 export default function EnhancedPatientDetailModal({ patientId, onClose }: EnhancedPatientDetailModalProps) {
   const [activeTab, setActiveTab] = useState('timeline');
 
-  const { data: patient, isLoading } = useQuery({
-    queryKey: ['patient', patientId],
-    queryFn: () => getPatient(patientId),
-  });
+  // Use mock data instead of API
+  const patient = useMemo(() => {
+    return mockPatients.find(p => p.id === patientId);
+  }, [patientId]);
 
-  if (isLoading) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
-      </div>
-    );
+  if (!patient) {
+    console.error('Patient not found:', patientId);
+    return null;
   }
-
-  if (!patient) return null;
 
   const tabs = [
     { id: 'timeline', label: 'Timeline', icon: Clock },

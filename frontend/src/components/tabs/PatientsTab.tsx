@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { getPatients } from '../../services/api';
+import React, { useState, useMemo } from 'react';
+import { mockPatients } from '../../data/mockPatients';
 import { Card, CardHeader, CardContent } from '../shared/Card';
 import Badge from '../shared/Badge';
 import Button from '../shared/Button';
@@ -82,44 +82,18 @@ const PatientsTab: React.FC<PatientsTabProps> = ({ demoMode = false }) => {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showPrintView, setShowPrintView] = useState(false);
 
-  // Fetch real data from backend
-  const [allPatients, setAllPatients] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Fetch patients from backend on mount
-  useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        console.log('Fetching patients from backend...');
-        const data = await getPatients();
-        console.log('Received patients from backend:', data);
-        setAllPatients(data);
-      } catch (err) {
-        console.error('Error fetching patients:', err);
-        setError('Failed to load patients from backend');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchPatients();
-  }, []);
-
-  // Filter patients locally based on search and filters
+  // Use mock data
   const patients = useMemo(() => {
-    let filtered = [...allPatients];
+    let filtered = [...mockPatients];
 
     // Apply search filter
     if (search) {
       const searchLower = search.toLowerCase();
       filtered = filtered.filter(p =>
-        p.mrn?.toLowerCase().includes(searchLower) ||
-        p.first_name?.toLowerCase().includes(searchLower) ||
-        p.last_name?.toLowerCase().includes(searchLower) ||
-        p.email?.toLowerCase().includes(searchLower)
+        p.mrn.toLowerCase().includes(searchLower) ||
+        p.first_name.toLowerCase().includes(searchLower) ||
+        p.last_name.toLowerCase().includes(searchLower) ||
+        p.email.toLowerCase().includes(searchLower)
       );
     }
 
@@ -149,7 +123,9 @@ const PatientsTab: React.FC<PatientsTabProps> = ({ demoMode = false }) => {
     }
 
     return filtered;
-  }, [allPatients, search, filters]);
+  }, [search, filters]);
+
+  const isLoading = false;
 
   const getJourneyStageInfo = (stage: string) => {
     const stages = {
