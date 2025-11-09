@@ -4,6 +4,7 @@ import { Card, CardHeader, CardContent } from '../shared/Card';
 import Badge from '../shared/Badge';
 import Button from '../shared/Button';
 import EnhancedPatientDetailModal from './EnhancedPatientDetailModal';
+import { api } from '../../services/api';
 
 // Import ALL patient components
 import FilterSidebar from '../patients/FilterSidebar';
@@ -19,6 +20,7 @@ import InsuranceVerification from '../patients/InsuranceVerification';
 import MedicationImage from '../patients/MedicationImage';
 import NPILookup from '../patients/NPILookup';
 import PDFViewer from '../patients/PDFViewer';
+import AbandonmentRiskScore from '../patients/AbandonmentRiskScore';
 
 // Import ALL relevant system-wide components
 import GlobalSearch from '../shared/GlobalSearch';
@@ -67,7 +69,7 @@ const PatientsTab: React.FC<PatientsTabProps> = ({ demoMode = false }) => {
   const [selectedPatients, setSelectedPatients] = useState<Set<string>>(new Set());
   const [showFilterSidebar, setShowFilterSidebar] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState([
-    'mrn', 'name', 'insurance', 'sdoh', 'journey', 'adherence', 'lastContact', 'actions'
+    'mrn', 'name', 'insurance', 'sdoh', 'journey', 'adherence', 'abandonmentRisk', 'lastContact', 'actions'
   ]);
 
   // State for all new modal components
@@ -192,6 +194,41 @@ const PatientsTab: React.FC<PatientsTabProps> = ({ demoMode = false }) => {
       digitalAccess: 'full' as const,
       healthLiteracy: patient.sdoh_risk_score >= 70 ? 'low' as const : 'high' as const,
     };
+  };
+
+  const calculateAbandonmentRisk = async (patientId: string) => {
+    try {
+      const response = await api.get(`/api/triggers/patient-risk/${patientId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to calculate risk:', error);
+      return null;
+    }
+  };
+
+  const getAbandonmentRiskScore = (patient: any): number => {
+    // Calculate a mock risk score based on patient data
+    // In production, this would come from the API
+    let score = 0;
+
+    // SDOH contributes to risk
+    score += patient.sdoh_risk_score * 0.3;
+
+    // Journey stage contributes
+    if (patient.journey_stage === 'churned') score += 30;
+    else if (patient.journey_stage === 'at_risk') score += 25;
+    else if (patient.journey_stage === 'pa_pending') score += 15;
+
+    // Low adherence contributes
+    if (patient.adherence_score < 50) score += 20;
+    else if (patient.adherence_score < 75) score += 10;
+
+    // Days since last contact
+    const daysSince = Math.floor((Date.now() - new Date(patient.last_contact_date).getTime()) / (1000 * 60 * 60 * 24));
+    if (daysSince > 30) score += 15;
+    else if (daysSince > 14) score += 10;
+
+    return Math.min(Math.round(score), 99);
   };
 
   return (
@@ -379,6 +416,7 @@ const PatientsTab: React.FC<PatientsTabProps> = ({ demoMode = false }) => {
                       {visibleColumns.includes('sdoh') && <th style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold }}>SDOH Factors</th>}
                       {visibleColumns.includes('journey') && <th style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold }}>Journey Stage</th>}
                       {visibleColumns.includes('adherence') && <th style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold }}>Adherence</th>}
+                      {visibleColumns.includes('abandonmentRisk') && <th style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold }}>Abandonment Risk</th>}
                       {visibleColumns.includes('lastContact') && <th style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold }}>Last Contact</th>}
                       {visibleColumns.includes('actions') && <th style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold }}>AI Next Action</th>}
                     </tr>
@@ -481,6 +519,15 @@ const PatientsTab: React.FC<PatientsTabProps> = ({ demoMode = false }) => {
                                   />
                                 </div>
                               </div>
+                            </td>
+                          )}
+                          {visibleColumns.includes('abandonmentRisk') && (
+                            <td style={{ padding: spacing[3] }} onClick={(e) => e.stopPropagation()}>
+                              <AbandonmentRiskScore
+                                riskScore={getAbandonmentRiskScore(patient)}
+                                patientId={patient.id}
+                                onCalculate={calculateAbandonmentRisk}
+                              />
                             </td>
                           )}
                           {visibleColumns.includes('lastContact') && (

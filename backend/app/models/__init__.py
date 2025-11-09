@@ -4,6 +4,7 @@ from app.models.geographic import GeographicProfile
 from app.models.formulary import Formulary
 from app.models.program import AssistanceProgram, Enrollment
 from app.models.integration import DataIntegration
+from app.models.intervention import Intervention, AdherenceEvent, MarketingCampaign
 
 __all__ = [
     "Patient",
@@ -13,4 +14,7 @@ __all__ = [
     "AssistanceProgram",
     "Enrollment",
     "DataIntegration",
+    "Intervention",
+    "AdherenceEvent",
+    "MarketingCampaign",
 ]

@@ -5,6 +5,8 @@ import PatientsTab from './components/tabs/PatientsTab';
 import ConversationsTab from './components/tabs/ConversationsTab';
 import AnalyticsTab from './components/tabs/AnalyticsTab';
 import ConfigurationTab from './components/tabs/ConfigurationTab';
+import MarketingInsightsTab from './components/tabs/MarketingInsightsTab';
+import OutcomesTab from './components/tabs/OutcomesTab';
 import InstallPrompt from './components/shared/InstallPrompt';
 import OfflineIndicator from './components/shared/OfflineIndicator';
 import DemoControlPanel from './components/demo/DemoControlPanel';
@@ -29,6 +31,10 @@ function App() {
         return <ConversationsTab />;
       case 'analytics':
         return <AnalyticsTab />;
+      case 'marketing':
+        return <MarketingInsightsTab />;
+      case 'outcomes':
+        return <OutcomesTab />;
       case 'configuration':
         return <ConfigurationTab />;
       default:

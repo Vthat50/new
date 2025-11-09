@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { colors, spacing, typography } from '../../lib/design-system';
 import AnimatedCounter from '../shared/AnimatedCounter';
 import Sparkline from '../shared/Sparkline';
-import LiveActivityMap from '../dashboard/LiveActivityMap';
+import GeographicActivityHeatMap from '../dashboard/GeographicActivityHeatMap';
 import QuickActionsPanel from '../dashboard/QuickActionsPanel';
 import CampaignWizard from '../modals/CampaignWizard';
 import ReportGenerator from '../modals/ReportGenerator';
@@ -89,51 +89,47 @@ export default function EnhancedDashboardTab({ onNavigate, demoMode = false }: E
     },
   ];
 
-  // Live activity data with geographic coordinates
+  // Live activity data
   const activeCalls = [
     {
       id: 'call-1',
-      lat: 34.05,
-      lng: -118.25,
       patientName: demoMode ? 'Patient 00123' : 'Sarah M.',
       patientId: 'PT-00123',
       callReason: 'Prior Authorization Update',
       sentiment: 'positive' as const,
       duration: '3:24',
       transcriptSnippet: 'I understand your PA was approved. Let me verify your coverage details',
+      startTime: new Date(Date.now() - 3 * 60 * 1000), // 3 minutes ago
     },
     {
       id: 'call-2',
-      lat: 29.76,
-      lng: -95.37,
       patientName: demoMode ? 'Patient 00456' : 'Michael R.',
       patientId: 'PT-00456',
       callReason: 'Refill Request',
       sentiment: 'neutral' as const,
       duration: '1:56',
       transcriptSnippet: 'Yes, I can help you with that refill. What pharmacy do you use',
+      startTime: new Date(Date.now() - 2 * 60 * 1000), // 2 minutes ago
     },
     {
       id: 'call-3',
-      lat: 40.71,
-      lng: -74.01,
       patientName: demoMode ? 'Patient 00789' : 'Jennifer K.',
       patientId: 'PT-00789',
       callReason: 'Financial Assistance',
       sentiment: 'positive' as const,
       duration: '5:12',
       transcriptSnippet: 'Great news! You qualify for our copay assistance program',
+      startTime: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes ago
     },
     {
       id: 'call-4',
-      lat: 33.45,
-      lng: -112.07,
       patientName: demoMode ? 'Patient 00234' : 'David L.',
       patientId: 'PT-00234',
       callReason: 'Side Effects Inquiry',
       sentiment: 'neutral' as const,
       duration: '4:15',
       transcriptSnippet: 'Tell me more about what you\'re experiencing so I can help',
+      startTime: new Date(Date.now() - 4 * 60 * 1000), // 4 minutes ago
     },
   ];
 
@@ -227,19 +223,14 @@ export default function EnhancedDashboardTab({ onNavigate, demoMode = false }: E
         })}
       </div>
 
-      {/* Live Activity Map */}
-      <div style={{ backgroundColor: 'white', borderRadius: '12px', border: `1px solid ${colors.neutral[200]}`, padding: spacing[6] }}>
-        <h2 style={{ fontSize: typography.fontSize.lg, fontWeight: typography.fontWeight.semibold, marginBottom: spacing[4] }}>
-          Live Activity Monitor
-        </h2>
-        <LiveActivityMap
-          activeCalls={activeCalls}
-          onJumpToCall={(callId) => {
-            console.log('Jumping to call:', callId);
-            onNavigate('conversations');
-          }}
-        />
-      </div>
+      {/* Geographic Activity Heat Map */}
+      <GeographicActivityHeatMap
+        activeCalls={activeCalls}
+        onJumpToCall={(callId) => {
+          console.log('Jumping to call:', callId);
+          onNavigate('conversations');
+        }}
+      />
 
       {/* Quick Actions Panel */}
       <QuickActionsPanel
