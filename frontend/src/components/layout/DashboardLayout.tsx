@@ -106,7 +106,7 @@ export default function DashboardLayout({ children, activeTab, onTabChange, demo
                 fontWeight: typography.fontWeight.semibold
               }}
             >
-              PharmAI Voice Hub
+              Vevara
             </h1>
           )}
           <button
