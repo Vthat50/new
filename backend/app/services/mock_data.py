@@ -4,7 +4,8 @@ from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from app.models import (
     Patient, Call, GeographicProfile, Formulary,
-    AssistanceProgram, Enrollment, DataIntegration
+    AssistanceProgram, Enrollment, DataIntegration,
+    Intervention, AdherenceEvent, MarketingCampaign
 )
 
 fake = Faker()
@@ -529,6 +530,185 @@ def generate_mock_integrations(db: Session):
     return integrations
 
 
+def generate_mock_interventions(db: Session, calls):
+    """Generate mock interventions for calls with detected triggers"""
+    from app.services.trigger_detection import detect_triggers_in_transcript
+
+    interventions = []
+    trigger_types_list = [
+        "cost_concern", "injection_anxiety", "side_effect_fear",
+        "insurance_denial", "access_barrier", "complexity_concern"
+    ]
+    intervention_types_map = {
+        "cost_concern": "copay_enrollment",
+        "injection_anxiety": "nurse_callback",
+        "side_effect_fear": "educational_material",
+        "insurance_denial": "prior_auth_support",
+        "access_barrier": "home_delivery",
+        "complexity_concern": "educational_material"
+    }
+
+    for call in calls:
+        if not call.transcript:
+            continue
+
+        # Detect triggers in transcript
+        triggers = detect_triggers_in_transcript(call.transcript)
+
+        # Create interventions for detected triggers (60% chance of intervention)
+        for trigger in triggers[:2]:  # Max 2 interventions per call
+            if random.random() < 0.6:
+                intervention_applied = random.random() < 0.75  # 75% applied
+
+                # Generate outcome based on intervention
+                if intervention_applied:
+                    adherence_30 = random.random() < 0.72  # 72% adherence with intervention
+                    adherence_90 = random.random() < 0.68  # 68% adherence at 90 days
+                    outcome = "patient_retained" if adherence_90 else "patient_abandoned"
+                else:
+                    adherence_30 = random.random() < 0.48  # 48% without intervention
+                    adherence_90 = random.random() < 0.42  # 42% at 90 days
+                    outcome = "patient_retained" if adherence_90 else "patient_abandoned"
+
+                intervention = Intervention(
+                    call_id=call.id,
+                    patient_id=call.patient_id,
+                    trigger_type=trigger["trigger_type"],
+                    trigger_confidence=trigger["confidence"],
+                    trigger_text=trigger.get("context", "")[:500],
+                    trigger_timestamp=call.call_date,
+                    intervention_type=intervention_types_map.get(trigger["trigger_type"]),
+                    intervention_applied=intervention_applied,
+                    intervention_timestamp=call.call_date + timedelta(minutes=random.randint(5, 30)) if intervention_applied else None,
+                    intervention_notes=f"Applied {intervention_types_map.get(trigger['trigger_type'])} intervention" if intervention_applied else None,
+                    outcome_status=outcome,
+                    adherence_30_day=adherence_30,
+                    adherence_90_day=adherence_90,
+                    follow_up_date=call.call_date + timedelta(days=random.randint(7, 30))
+                )
+                db.add(intervention)
+                interventions.append(intervention)
+
+    db.commit()
+    return interventions
+
+
+def generate_mock_adherence_events(db: Session, patients):
+    """Generate mock adherence events for patients"""
+    events = []
+    event_types = ["prescription_fill", "injection_administered", "lab_result", "patient_report", "missed_dose"]
+
+    for patient in patients:
+        # Generate 2-5 adherence events per patient over last 90 days
+        num_events = random.randint(2, 5)
+
+        for i in range(num_events):
+            days_ago = random.randint(0, 90)
+            event_date = datetime.now() - timedelta(days=days_ago)
+            event_type = random.choice(event_types)
+
+            # Adherent patients have more positive events
+            if patient.adherence_score >= 80:
+                adherent = event_type != "missed_dose" or random.random() < 0.1
+            elif patient.adherence_score >= 60:
+                adherent = random.random() < 0.7
+            else:
+                adherent = random.random() < 0.45
+
+            event_data = {}
+            if event_type == "prescription_fill":
+                event_data = {"pharmacy": fake.company(), "quantity": random.randint(30, 90)}
+            elif event_type == "injection_administered":
+                event_data = {"location": random.choice(["home", "clinic"]), "administered_by": random.choice(["self", "nurse"])}
+            elif event_type == "lab_result":
+                event_data = {"test_type": random.choice(["A1C", "Lipid Panel", "CBC"]), "result": "normal"}
+
+            event = AdherenceEvent(
+                patient_id=patient.id,
+                event_type=event_type,
+                event_date=event_date,
+                event_data=event_data,
+                medication_name=random.choice(DRUG_NAMES),
+                days_supply=random.choice([30, 60, 90]) if event_type == "prescription_fill" else None,
+                adherent=adherent,
+                notes=fake.sentence() if random.random() < 0.3 else None
+            )
+            db.add(event)
+            events.append(event)
+
+    db.commit()
+    return events
+
+
+def generate_mock_marketing_campaigns(db: Session):
+    """Generate mock marketing campaigns"""
+    campaigns = []
+
+    campaign_data = [
+        {
+            "name": "Injection Anxiety Support Campaign",
+            "type": "education",
+            "theme": "injection_support",
+            "segment": {"barriers": ["injection_anxiety"], "risk_level": "medium"},
+            "materials": ["How-to video", "Nurse hotline card", "Auto-injector demo"]
+        },
+        {
+            "name": "Copay Assistance Awareness",
+            "type": "outreach",
+            "theme": "cost_assistance",
+            "segment": {"barriers": ["cost"], "insurance_types": ["Commercial", "Medicare"]},
+            "materials": ["Copay card", "Savings calculator", "Enrollment form"]
+        },
+        {
+            "name": "At-Risk Patient Retention",
+            "type": "retention",
+            "theme": "adherence_support",
+            "segment": {"journey_stage": "at_risk", "adherence_score": "<60"},
+            "materials": ["Personalized call", "Reminder system", "Support group invite"]
+        },
+        {
+            "name": "Side Effect Management Education",
+            "type": "education",
+            "theme": "side_effect_management",
+            "segment": {"barriers": ["side_effect_fear"]},
+            "materials": ["Side effect guide", "Pharmacist consult", "24/7 support line"]
+        },
+        {
+            "name": "PA Approval Assistance",
+            "type": "awareness",
+            "theme": "pa_support",
+            "segment": {"journey_stage": "pa_pending"},
+            "materials": ["PA tracker", "Doctor office liaison", "Appeal support"]
+        }
+    ]
+
+    for data in campaign_data:
+        start_date = datetime.now() - timedelta(days=random.randint(30, 90))
+        end_date = start_date + timedelta(days=random.randint(30, 60)) if random.random() < 0.7 else None
+
+        patients_reached = random.randint(50, 300)
+        engagement_rate = random.uniform(0.15, 0.45)  # 15-45% engagement
+        conversion_rate = random.uniform(0.05, 0.25)  # 5-25% conversion
+
+        campaign = MarketingCampaign(
+            campaign_name=data["name"],
+            campaign_type=data["type"],
+            start_date=start_date,
+            end_date=end_date,
+            target_segment=data["segment"],
+            message_theme=data["theme"],
+            materials_shared=data["materials"],
+            patients_reached=patients_reached,
+            engagement_rate=engagement_rate,
+            conversion_rate=conversion_rate
+        )
+        db.add(campaign)
+        campaigns.append(campaign)
+
+    db.commit()
+    return campaigns
+
+
 def populate_all_mock_data(db: Session):
     """Populate database with comprehensive mock data (500+ patients, 30 days call history)"""
     print("Generating mock patients (500+)...")
@@ -552,7 +732,19 @@ def populate_all_mock_data(db: Session):
     print("Generating mock integrations...")
     generate_mock_integrations(db)
 
+    print("Generating mock interventions from call analysis...")
+    interventions = generate_mock_interventions(db, calls)
+
+    print("Generating mock adherence events...")
+    adherence_events = generate_mock_adherence_events(db, patients)
+
+    print("Generating mock marketing campaigns...")
+    campaigns = generate_mock_marketing_campaigns(db)
+
     print("✓ Mock data generation complete!")
     print(f"  - {len(patients)} patients")
     print(f"  - {len(calls)} calls over 30 days")
     print(f"  - Average {len(calls)/len(patients):.1f} calls per patient")
+    print(f"  - {len(interventions)} interventions detected and applied")
+    print(f"  - {len(adherence_events)} adherence events tracked")
+    print(f"  - {len(campaigns)} marketing campaigns running")
