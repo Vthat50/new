@@ -53,7 +53,6 @@ export default function DashboardLayout({ children, activeTab, onTabChange, demo
     { id: 'conversations', label: 'Conversations', icon: Phone },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'marketing', label: 'Marketing Insights', icon: TrendingUp },
-    { id: 'outcomes', label: 'Outcomes', icon: Target },
     { id: 'configuration', label: 'Configuration', icon: Settings },
   ];
 
