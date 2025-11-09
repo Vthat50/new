@@ -7,10 +7,8 @@ import EnhancedPatientDetailModal from './EnhancedPatientDetailModal';
 import { api } from '../../services/api';
 
 // Import ALL patient components
-import FilterSidebar from '../patients/FilterSidebar';
 import AINextAction from '../patients/AINextAction';
 import SDOHBadges from '../patients/SDOHBadges';
-import SavedFilters from '../patients/SavedFilters';
 import PatientQuickActions from '../patients/PatientQuickActions';
 import AdverseEventForm from '../patients/AdverseEventForm';
 import CopayCardRegeneration from '../patients/CopayCardRegeneration';
@@ -48,7 +46,6 @@ import {
   Calendar,
   TrendingUp,
   Download,
-  Filter,
   Users,
 } from 'lucide-react';
 import { colors, spacing, typography } from '../../lib/design-system';
@@ -59,15 +56,11 @@ interface PatientsTabProps {
 
 const PatientsTab: React.FC<PatientsTabProps> = ({ demoMode = false }) => {
   const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState({
-    journey_stage: '',
-    risk_level: '',
-    insurance_type: '',
-    state: '',
-  });
+  const [insuranceFilter, setInsuranceFilter] = useState<string>('');
+  const [journeyFilter, setJourneyFilter] = useState<string>('');
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [selectedPatients, setSelectedPatients] = useState<Set<string>>(new Set());
-  const [showFilterSidebar, setShowFilterSidebar] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState([
     'mrn', 'name', 'insurance', 'sdoh', 'journey', 'adherence', 'abandonmentRisk', 'lastContact', 'actions'
   ]);
@@ -84,48 +77,61 @@ const PatientsTab: React.FC<PatientsTabProps> = ({ demoMode = false }) => {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showPrintView, setShowPrintView] = useState(false);
 
-  // Use mock data
+  // Use mock data with filtering and sorting
   const patients = useMemo(() => {
     let filtered = [...mockPatients];
 
-    // Apply search filter
+    // Apply search filter (MRN + Name)
     if (search) {
       const searchLower = search.toLowerCase();
       filtered = filtered.filter(p =>
         p.mrn.toLowerCase().includes(searchLower) ||
         p.first_name.toLowerCase().includes(searchLower) ||
-        p.last_name.toLowerCase().includes(searchLower) ||
-        p.email.toLowerCase().includes(searchLower)
+        p.last_name.toLowerCase().includes(searchLower)
       );
     }
 
-    // Apply journey stage filter
-    if (filters.journey_stage) {
-      filtered = filtered.filter(p => p.journey_stage === filters.journey_stage);
+    // Apply insurance filter
+    if (insuranceFilter) {
+      filtered = filtered.filter(p => p.insurance_type === insuranceFilter);
     }
 
-    // Apply risk level filter
-    if (filters.risk_level) {
-      filtered = filtered.filter(p => {
-        if (filters.risk_level === 'high') return p.sdoh_risk_score >= 70;
-        if (filters.risk_level === 'medium') return p.sdoh_risk_score >= 40 && p.sdoh_risk_score < 70;
-        if (filters.risk_level === 'low') return p.sdoh_risk_score < 40;
-        return true;
+    // Apply journey stage filter
+    if (journeyFilter) {
+      filtered = filtered.filter(p => p.journey_stage === journeyFilter);
+    }
+
+    // Apply sorting
+    if (sortConfig) {
+      filtered.sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
+
+        switch (sortConfig.key) {
+          case 'adherence':
+            aValue = a.adherence_score;
+            bValue = b.adherence_score;
+            break;
+          case 'abandonmentRisk':
+            aValue = getAbandonmentRiskScore(a);
+            bValue = getAbandonmentRiskScore(b);
+            break;
+          case 'lastContact':
+            aValue = new Date(a.last_contact_date).getTime();
+            bValue = new Date(b.last_contact_date).getTime();
+            break;
+          default:
+            return 0;
+        }
+
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
       });
     }
 
-    // Apply insurance type filter
-    if (filters.insurance_type) {
-      filtered = filtered.filter(p => p.insurance_type === filters.insurance_type);
-    }
-
-    // Apply state filter
-    if (filters.state) {
-      filtered = filtered.filter(p => p.state === filters.state);
-    }
-
     return filtered;
-  }, [search, filters]);
+  }, [search, insuranceFilter, journeyFilter, sortConfig]);
 
   const isLoading = false;
 
@@ -174,6 +180,23 @@ const PatientsTab: React.FC<PatientsTabProps> = ({ demoMode = false }) => {
   const handleBulkAction = (action: string) => {
     console.log(`Bulk action: ${action} on ${selectedPatients.size} patients`);
     alert(`${action} on ${selectedPatients.size} patients`);
+  };
+
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (key: string) => {
+    if (!sortConfig || sortConfig.key !== key) {
+      return <span style={{ color: colors.neutral[400], marginLeft: spacing[1] }}>⇅</span>;
+    }
+    return sortConfig.direction === 'asc'
+      ? <span style={{ color: colors.primary[500], marginLeft: spacing[1] }}>▲</span>
+      : <span style={{ color: colors.primary[500], marginLeft: spacing[1] }}>▼</span>;
   };
 
   const getRiskBadge = (score: number) => {
@@ -234,100 +257,8 @@ const PatientsTab: React.FC<PatientsTabProps> = ({ demoMode = false }) => {
   return (
     <UndoRedoProvider>
       <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-        {/* Filter Sidebar */}
-        {showFilterSidebar && (
-          <div style={{ width: '300px', borderRight: `1px solid ${colors.neutral[200]}`, overflowY: 'auto' }}>
-            <FilterSidebar
-              filters={filters}
-              onFilterChange={(newFilters) => setFilters({ ...filters, ...newFilters })}
-              onSave={() => console.log('Filter saved')}
-              onReset={() => setFilters({ journey_stage: '', risk_level: '', insurance_type: '', state: '' })}
-            />
-            <div style={{ padding: spacing[4] }}>
-              <SavedFilters
-                onFilterSelect={(filterData) => setFilters({ ...filters, ...filterData })}
-                currentFilters={filters}
-                onSave={(name, filterData) => console.log('Filter saved:', name, filterData)}
-              />
-            </div>
-          </div>
-        )}
-
         {/* Main Content */}
         <div style={{ flex: 1, padding: spacing[6], backgroundColor: colors.background.page, overflowY: 'auto' }}>
-          {/* Header with actions */}
-          <div className="flex items-center justify-between" style={{ marginBottom: spacing[6] }}>
-            <div>
-              <h1 className="text-neutral-900" style={{ fontSize: typography.fontSize['3xl'], fontWeight: typography.fontWeight.semibold, marginBottom: spacing[1] }}>
-                <Users style={{ width: '32px', height: '32px', display: 'inline', marginRight: spacing[2] }} />
-                Patients
-              </h1>
-              <p className="text-neutral-500" style={{ fontSize: typography.fontSize.sm }}>
-                {patients?.length || 0} patients • Manage patient journeys and interactions
-              </p>
-            </div>
-            <div className="flex items-center" style={{ gap: spacing[2] }}>
-              <UndoRedoControls showLabels={false} variant="toolbar" />
-              <button
-                onClick={() => setShowFilterSidebar(!showFilterSidebar)}
-                className="border border-neutral-300 rounded-md hover:bg-neutral-50 transition-colors"
-                style={{ padding: `${spacing[2]} ${spacing[4]}`, fontSize: typography.fontSize.sm, fontWeight: typography.fontWeight.medium, color: colors.neutral[700] }}
-              >
-                <Filter style={{ width: '16px', height: '16px', display: 'inline', marginRight: spacing[2] }} />
-                {showFilterSidebar ? 'Hide' : 'Show'} Filters
-              </button>
-              <button
-                onClick={handleExportCSV}
-                className="border border-neutral-300 rounded-md hover:bg-neutral-50 transition-colors"
-                style={{ padding: `${spacing[2]} ${spacing[4]}`, fontSize: typography.fontSize.sm, fontWeight: typography.fontWeight.medium, color: colors.neutral[700] }}
-              >
-                <Download style={{ width: '16px', height: '16px', display: 'inline', marginRight: spacing[2] }} />
-                Export CSV
-              </button>
-              <button
-                className="rounded-md transition-colors"
-                style={{ padding: `${spacing[2]} ${spacing[4]}`, backgroundColor: colors.primary[500], color: 'white', fontSize: typography.fontSize.sm, fontWeight: typography.fontWeight.medium }}
-              >
-                + Launch Campaign
-              </button>
-            </div>
-          </div>
-
-          {/* Search Bar with GlobalSearch component */}
-          <div style={{ marginBottom: spacing[4] }}>
-            <GlobalSearch
-              placeholder="Search patients by MRN, name, email..."
-              onSearch={(query) => setSearch(query)}
-              onSelectResult={(result) => setSelectedPatientId(result.id)}
-              searchableFields={['mrn', 'first_name', 'last_name', 'email', 'phone']}
-              data={mockPatients}
-            />
-          </div>
-
-          {/* Column Controls */}
-          <div style={{ marginBottom: spacing[4] }}>
-            <ColumnControls
-              availableColumns={[
-                { id: 'mrn', label: 'MRN' },
-                { id: 'name', label: 'Name' },
-                { id: 'insurance', label: 'Insurance' },
-                { id: 'sdoh', label: 'SDOH Risk' },
-                { id: 'journey', label: 'Journey Stage' },
-                { id: 'adherence', label: 'Adherence' },
-                { id: 'lastContact', label: 'Last Contact' },
-                { id: 'actions', label: 'Actions' },
-              ]}
-              visibleColumns={visibleColumns}
-              onToggleColumn={(columnId) => {
-                setVisibleColumns(prev =>
-                  prev.includes(columnId)
-                    ? prev.filter(id => id !== columnId)
-                    : [...prev, columnId]
-                );
-              }}
-              onReset={() => setVisibleColumns(['mrn', 'name', 'insurance', 'sdoh', 'journey', 'adherence', 'lastContact', 'actions'])}
-            />
-          </div>
 
           {/* Bulk Actions Bar */}
           {selectedPatients.size > 0 && (
@@ -346,62 +277,53 @@ const PatientsTab: React.FC<PatientsTabProps> = ({ demoMode = false }) => {
             </div>
           )}
 
-          {/* Quick Filters */}
-          <div className="flex items-center" style={{ gap: spacing[3], marginBottom: spacing[4], flexWrap: 'wrap' }}>
-            <button
-              onClick={() => setFilters({ ...filters, journey_stage: 'at_risk' })}
-              className="px-3 py-2 rounded-md border transition-colors"
-              style={{
-                borderColor: filters.journey_stage === 'at_risk' ? colors.status.error : colors.neutral[300],
-                backgroundColor: filters.journey_stage === 'at_risk' ? colors.status.errorBg : 'white',
-                color: filters.journey_stage === 'at_risk' ? colors.status.error : colors.neutral[700],
-                fontSize: typography.fontSize.sm,
-              }}
-            >
-              🚨 At Risk Patients
-            </button>
-            <button
-              onClick={() => setFilters({ ...filters, risk_level: 'high' })}
-              className="px-3 py-2 rounded-md border transition-colors"
-              style={{
-                borderColor: filters.risk_level === 'high' ? colors.status.error : colors.neutral[300],
-                backgroundColor: filters.risk_level === 'high' ? colors.status.errorBg : 'white',
-                color: filters.risk_level === 'high' ? colors.status.error : colors.neutral[700],
-                fontSize: typography.fontSize.sm,
-              }}
-            >
-              ⚠️ High SDOH Risk
-            </button>
-            <button
-              onClick={() => setFilters({ ...filters, journey_stage: 'pa_pending' })}
-              className="px-3 py-2 rounded-md border transition-colors"
-              style={{
-                borderColor: filters.journey_stage === 'pa_pending' ? colors.status.warning : colors.neutral[300],
-                backgroundColor: filters.journey_stage === 'pa_pending' ? colors.status.warningBg : 'white',
-                color: filters.journey_stage === 'pa_pending' ? colors.status.warning : colors.neutral[700],
-                fontSize: typography.fontSize.sm,
-              }}
-            >
-              ⏳ PA Pending
-            </button>
-            <button
-              onClick={() => setFilters({ journey_stage: '', risk_level: '', insurance_type: '', state: '' })}
-              className="px-3 py-2 rounded-md border border-neutral-300 hover:bg-neutral-50 transition-colors"
-              style={{
-                color: colors.neutral[700],
-                fontSize: typography.fontSize.sm,
-              }}
-            >
-              Clear All
-            </button>
-          </div>
-
           {/* Patients Table */}
           <Card>
             <CardContent>
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', fontSize: typography.fontSize.sm }}>
                   <thead>
+                    {/* Search Row */}
+                    <tr style={{ borderBottom: `1px solid ${colors.neutral[200]}` }}>
+                      <th style={{ padding: spacing[2] }}></th>
+                      <th colSpan={2} style={{ padding: spacing[2] }}>
+                        <div style={{ position: 'relative' }}>
+                          <Search
+                            style={{
+                              position: 'absolute',
+                              left: spacing[2],
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                              width: '14px',
+                              height: '14px',
+                              color: colors.neutral[400],
+                            }}
+                          />
+                          <input
+                            type="text"
+                            placeholder="Search by name or MRN..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            style={{
+                              width: '100%',
+                              padding: `${spacing[1]} ${spacing[2]} ${spacing[1]} ${spacing[6]}`,
+                              fontSize: typography.fontSize.xs,
+                              border: `1px solid ${colors.neutral[300]}`,
+                              borderRadius: '4px',
+                              outline: 'none',
+                            }}
+                            onFocus={(e) => {
+                              e.target.style.borderColor = colors.primary[500];
+                            }}
+                            onBlur={(e) => {
+                              e.target.style.borderColor = colors.neutral[300];
+                            }}
+                          />
+                        </div>
+                      </th>
+                      <th colSpan={10}></th>
+                    </tr>
+                    {/* Header Row */}
                     <tr style={{ borderBottom: `2px solid ${colors.neutral[200]}` }}>
                       <th style={{ padding: spacing[3], textAlign: 'left' }}>
                         <input
@@ -410,15 +332,103 @@ const PatientsTab: React.FC<PatientsTabProps> = ({ demoMode = false }) => {
                           onChange={handleSelectAll}
                         />
                       </th>
-                      {visibleColumns.includes('mrn') && <th style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold }}>MRN</th>}
-                      {visibleColumns.includes('name') && <th style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold }}>Patient</th>}
-                      {visibleColumns.includes('insurance') && <th style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold }}>Insurance</th>}
-                      {visibleColumns.includes('sdoh') && <th style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold }}>SDOH Factors</th>}
-                      {visibleColumns.includes('journey') && <th style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold }}>Journey Stage</th>}
-                      {visibleColumns.includes('adherence') && <th style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold }}>Adherence</th>}
-                      {visibleColumns.includes('abandonmentRisk') && <th style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold }}>Abandonment Risk</th>}
-                      {visibleColumns.includes('lastContact') && <th style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold }}>Last Contact</th>}
-                      {visibleColumns.includes('actions') && <th style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold }}>AI Next Action</th>}
+                      {visibleColumns.includes('mrn') && (
+                        <th style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold }}>
+                          MRN
+                        </th>
+                      )}
+                      {visibleColumns.includes('name') && (
+                        <th style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold }}>
+                          Patient
+                        </th>
+                      )}
+                      {visibleColumns.includes('insurance') && (
+                        <th style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
+                            Insurance
+                            <select
+                              value={insuranceFilter}
+                              onChange={(e) => setInsuranceFilter(e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
+                              style={{
+                                padding: `${spacing[1]} ${spacing[2]}`,
+                                fontSize: typography.fontSize.xs,
+                                border: `1px solid ${colors.neutral[300]}`,
+                                borderRadius: '4px',
+                                backgroundColor: 'white',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <option value="">All</option>
+                              <option value="Commercial">Commercial</option>
+                              <option value="Medicare">Medicare</option>
+                              <option value="Medicaid">Medicaid</option>
+                              <option value="Uninsured">Uninsured</option>
+                            </select>
+                          </div>
+                        </th>
+                      )}
+                      {visibleColumns.includes('sdoh') && (
+                        <th style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold }}>
+                          SDOH Factors
+                        </th>
+                      )}
+                      {visibleColumns.includes('journey') && (
+                        <th style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
+                            Journey Stage
+                            <select
+                              value={journeyFilter}
+                              onChange={(e) => setJourneyFilter(e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
+                              style={{
+                                padding: `${spacing[1]} ${spacing[2]}`,
+                                fontSize: typography.fontSize.xs,
+                                border: `1px solid ${colors.neutral[300]}`,
+                                borderRadius: '4px',
+                                backgroundColor: 'white',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <option value="">All</option>
+                              <option value="new_start">New Start</option>
+                              <option value="pa_pending">PA Pending</option>
+                              <option value="active_treatment">Active Treatment</option>
+                              <option value="at_risk">At Risk</option>
+                              <option value="churned">Churned</option>
+                            </select>
+                          </div>
+                        </th>
+                      )}
+                      {visibleColumns.includes('adherence') && (
+                        <th
+                          style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold, cursor: 'pointer' }}
+                          onClick={() => handleSort('adherence')}
+                        >
+                          Adherence{getSortIcon('adherence')}
+                        </th>
+                      )}
+                      {visibleColumns.includes('abandonmentRisk') && (
+                        <th
+                          style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold, cursor: 'pointer' }}
+                          onClick={() => handleSort('abandonmentRisk')}
+                        >
+                          Abandonment Risk{getSortIcon('abandonmentRisk')}
+                        </th>
+                      )}
+                      {visibleColumns.includes('lastContact') && (
+                        <th
+                          style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold, cursor: 'pointer' }}
+                          onClick={() => handleSort('lastContact')}
+                        >
+                          Last Contact{getSortIcon('lastContact')}
+                        </th>
+                      )}
+                      {visibleColumns.includes('actions') && (
+                        <th style={{ padding: spacing[3], textAlign: 'left', fontWeight: typography.fontWeight.semibold }}>
+                          AI Next Action
+                        </th>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
