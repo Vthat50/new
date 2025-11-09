@@ -94,4 +94,5 @@ export const initializeMockData = async () => {
   return data;
 };
 
+export { api };
 export default api;
