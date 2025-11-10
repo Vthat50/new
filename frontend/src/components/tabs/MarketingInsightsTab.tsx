@@ -15,6 +15,7 @@ import {
   Globe,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Enterprise Design System
 const enterpriseColors = {
@@ -320,66 +321,139 @@ export default function MarketingInsightsTab() {
   const handleAnalyzeLinks = async () => {
     if (websiteLinks.length === 0) return;
 
-    // Stage 1: Fetching (0-30%)
-    setProcessingStage('uploading');
-    setProcessingProgress(0);
-    setProcessingMessage('Fetching website content...');
+    try {
+      // Stage 1: Fetching (0-30%)
+      setProcessingStage('uploading');
+      setProcessingProgress(0);
+      setProcessingMessage('Fetching website content...');
 
-    for (let i = 0; i <= 30; i += 5) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-      setProcessingProgress(i);
-    }
+      // Fetch all website contents
+      const websiteContents: string[] = [];
+      let totalWords = 0;
 
-    // Stage 2: Processing (30-60%)
-    setProcessingStage('processing');
-    setProcessingMessage('Extracting content from webpages...');
+      for (let i = 0; i < websiteLinks.length; i++) {
+        setProcessingProgress(Math.floor((i / websiteLinks.length) * 30));
 
-    for (let i = 30; i <= 60; i += 3) {
-      await new Promise(resolve => setTimeout(resolve, 150));
-      setProcessingProgress(i);
-      if (i === 45) setProcessingMessage('Analyzing page structure...');
-    }
+        try {
+          // Use AllOrigins CORS proxy to fetch website content
+          const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(websiteLinks[i])}`;
+          const response = await fetch(proxyUrl);
+          const data = await response.json();
 
-    // Stage 3: Analyzing (60-100%)
-    setProcessingStage('analyzing');
-    setProcessingMessage('Running AI analysis on website content...');
+          // Extract text content from HTML
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(data.contents, 'text/html');
+          const text = doc.body.textContent || '';
 
-    for (let i = 60; i <= 95; i += 2) {
-      await new Promise(resolve => setTimeout(resolve, 200));
-      setProcessingProgress(i);
-      if (i === 75) setProcessingMessage('Identifying key themes and messaging...');
-      if (i === 90) setProcessingMessage('Calculating content distribution...');
-    }
+          // Clean and limit text
+          const cleanText = text.replace(/\s+/g, ' ').trim();
+          const limitedText = cleanText.substring(0, 5000); // Limit to 5000 chars per site
 
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setProcessingProgress(100);
-    setProcessingStage('complete');
-    setProcessingMessage('Analysis complete');
+          websiteContents.push(limitedText);
+          totalWords += limitedText.split(' ').length;
+        } catch (error) {
+          console.error(`Error fetching ${websiteLinks[i]}:`, error);
+          websiteContents.push('');
+        }
+      }
 
-    // Set analysis results
-    setTimeout(() => {
-      setMaterialAnalysis({
-        total_files: websiteLinks.length,
-        total_words: Math.floor(Math.random() * 8000) + 4000,
-        analyzed_at: new Date().toISOString(),
-        source: 'websites'
-      });
+      setProcessingProgress(30);
 
-      // Load all analysis data after processing is complete
+      // Stage 2: AI Analysis (30-100%)
+      setProcessingStage('analyzing');
+      setProcessingMessage('Running AI analysis with Gemini...');
+      setProcessingProgress(40);
+
+      // Initialize Gemini
+      const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+      // Define patient barriers from demo data
+      const patientBarriers = [
+        'Cost & Insurance Issues',
+        'Injection Anxiety',
+        'Side Effect Concerns',
+        'Access & Logistics',
+        'Efficacy Questions',
+        'Administration Complexity'
+      ];
+
+      const prompt = `Analyze the following marketing website content and determine what topics/themes are emphasized.
+
+Patient Barriers (from real call data):
+${patientBarriers.map((b, i) => `${i + 1}. ${b}`).join('\n')}
+
+Website Content:
+${websiteContents.join('\n\n---\n\n')}
+
+Please analyze the marketing content and provide:
+1. The main marketing topics/themes and their approximate percentage of focus
+2. How well each topic aligns with the patient barriers above (0-100%)
+
+Return ONLY a JSON object in this exact format:
+{
+  "topics": [
+    {"name": "Topic Name", "percentage": 40, "alignment_with_barriers": 15},
+    ...
+  ],
+  "total_words": ${totalWords}
+}`;
+
+      setProcessingProgress(60);
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+
+      setProcessingProgress(80);
+
+      // Parse JSON from response
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('Could not parse Gemini response');
+      }
+
+      const analysisData = JSON.parse(jsonMatch[0]);
+
+      setProcessingProgress(95);
+      setProcessingMessage('Finalizing analysis...');
+
+      // Load patient barrier data
       loadAnalysisData();
 
-      // Update marketing focus with analyzed data
-      setMarketingFocus([
-        { topic: 'Efficacy & Clinical Results', percentage: 45, alignment: 18 },
-        { topic: 'Dosing Convenience', percentage: 30, alignment: 54 },
-        { topic: 'Quality of Life', percentage: 20, alignment: 52 },
-        { topic: 'Cost Support Programs', percentage: 5, alignment: 15 },
-        { topic: 'Injection Training', percentage: 0, alignment: 0 },
-      ]);
+      // Update marketing focus with real analyzed data
+      const marketingTopics = analysisData.topics.map((topic: any) => ({
+        topic: topic.name,
+        percentage: topic.percentage,
+        alignment: topic.alignment_with_barriers
+      }));
 
+      setMarketingFocus(marketingTopics);
+
+      setProcessingProgress(100);
+      setProcessingStage('complete');
+      setProcessingMessage('Analysis complete');
+
+      // Set analysis results
+      setTimeout(() => {
+        setMaterialAnalysis({
+          total_files: websiteLinks.length,
+          total_words: analysisData.total_words || totalWords,
+          analyzed_at: new Date().toISOString(),
+          source: 'websites'
+        });
+
+        setProcessingStage('idle');
+        setProcessingProgress(0);
+      }, 1000);
+
+    } catch (error) {
+      console.error('Error analyzing websites:', error);
       setProcessingStage('idle');
       setProcessingProgress(0);
-    }, 1000);
+      setProcessingMessage('');
+      alert('Error analyzing websites. Please check the console for details.');
+    }
   };
 
   const exportReport = () => {
