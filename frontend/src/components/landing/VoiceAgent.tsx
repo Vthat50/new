@@ -59,7 +59,13 @@ export default function VoiceAgent() {
 
     vapi.on('error', (error: any) => {
       console.error('Vapi error:', error);
-      setError('Connection error. Please try again.');
+      console.error('Vapi error details:', {
+        message: error?.message,
+        code: error?.code,
+        statusCode: error?.statusCode,
+        error: JSON.stringify(error, null, 2)
+      });
+      setError(error?.message || 'Connection error. Please try again.');
       setIsLoading(false);
       setIsCallActive(false);
     });
