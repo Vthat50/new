@@ -13,6 +13,9 @@ import OfflineIndicator from './components/shared/OfflineIndicator';
 import DemoControlPanel from './components/demo/DemoControlPanel';
 import LiveNotifications from './components/shared/LiveNotifications';
 import { useRealtimeService } from './hooks/useRealtimeUpdates';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { LandingPage } from './components/landing';
+import Dashboard from './components/Dashboard';
 import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
@@ -47,18 +50,13 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <OfflineIndicator />
-      <DashboardLayout
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        demoMode={demoMode}
-        onDemoModeToggle={() => setDemoMode(!demoMode)}
-      >
-        {renderTab()}
-      </DashboardLayout>
-      <InstallPrompt />
-      {demoMode && <DemoControlPanel />}
-      {demoMode && <LiveNotifications />}
+      <Router>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/dashboard/*" element={<Dashboard />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
     </ErrorBoundary>
   );
 }

@@ -50,16 +50,41 @@ export default function AbandonmentRiskScore({
   const handleClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    if (!breakdown && onCalculate) {
+    if (!breakdown) {
       setLoading(true);
-      try {
-        const data = await onCalculate(patientId);
-        setBreakdown(data);
-      } catch (error) {
-        console.error('Failed to calculate risk:', error);
-      } finally {
+
+      // Hardcoded mock data
+      setTimeout(() => {
+        const mockBreakdown: RiskBreakdown = {
+          patient_id: patientId,
+          patient_name: "Patient " + patientId.slice(0, 8),
+          risk_score: riskScore,
+          risk_level: riskScore >= 70 ? 'high' : riskScore >= 40 ? 'medium' : 'low',
+          call_count: Math.floor(Math.random() * 5) + 2,
+          triggers_found: {},
+          total_trigger_count: 0,
+          last_call_date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+          sdoh_risk_score: Math.floor(riskScore * 0.8),
+          journey_stage: riskScore >= 70 ? 'at_risk' : riskScore >= 40 ? 'active_treatment' : 'new_start'
+        };
+
+        // Generate triggers based on risk score
+        if (riskScore >= 70) {
+          mockBreakdown.triggers_found = {
+            cost_concern: { trigger_type: 'cost_concern', count: 3, avg_confidence: 0.85, severity: 'high' },
+            injection_anxiety: { trigger_type: 'injection_anxiety', count: 2, avg_confidence: 0.78, severity: 'medium' }
+          };
+          mockBreakdown.total_trigger_count = 5;
+        } else if (riskScore >= 40) {
+          mockBreakdown.triggers_found = {
+            cost_concern: { trigger_type: 'cost_concern', count: 1, avg_confidence: 0.72, severity: 'high' }
+          };
+          mockBreakdown.total_trigger_count = 1;
+        }
+
+        setBreakdown(mockBreakdown);
         setLoading(false);
-      }
+      }, 800);
     }
 
     setShowModal(true);
