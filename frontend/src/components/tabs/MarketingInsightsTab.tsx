@@ -1132,7 +1132,7 @@ Return ONLY valid JSON (no other text):
                   return criticalGaps.length > 0 ? (
                     <div className="pt-4 border-t" style={{ borderColor: enterpriseColors.neutral[200] }}>
                       <p className="text-xs font-semibold mb-2" style={{ color: enterpriseColors.danger[700] }}>
-                        ⚠️ CRITICAL GAPS - UNDERSERVED PATIENT NEEDS
+                        CRITICAL GAPS - UNDERSERVED PATIENT NEEDS
                       </p>
                       <p className="text-xs mb-3" style={{ color: enterpriseColors.neutral[600] }}>
                         Topics with high patient call volume but low marketing coverage
@@ -1532,7 +1532,7 @@ Return ONLY valid JSON (no other text):
                           color: enterpriseColors.primary[700],
                           backgroundColor: enterpriseColors.primary[50]
                         }}>
-                          💡 Recommendation: Add more content about {underservedGaps.map(g => g.category.toLowerCase()).join(', ')} to better address patient needs.
+                          Recommendation: Add more content about {underservedGaps.map(g => g.category.toLowerCase()).join(', ')} to better address patient needs.
                         </p>
                       </>
                     );
