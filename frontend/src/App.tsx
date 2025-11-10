@@ -7,6 +7,7 @@ import AnalyticsTab from './components/tabs/AnalyticsTab';
 import ConfigurationTab from './components/tabs/ConfigurationTab';
 import MarketingInsightsTab from './components/tabs/MarketingInsightsTab';
 import OutcomesTab from './components/tabs/OutcomesTab';
+import WorkflowBuilderTab from './components/tabs/WorkflowBuilderTab';
 import InstallPrompt from './components/shared/InstallPrompt';
 import OfflineIndicator from './components/shared/OfflineIndicator';
 import DemoControlPanel from './components/demo/DemoControlPanel';
@@ -33,6 +34,8 @@ function App() {
         return <AnalyticsTab />;
       case 'marketing':
         return <MarketingInsightsTab />;
+      case 'workflow-builder':
+        return <WorkflowBuilderTab />;
       case 'outcomes':
         return <OutcomesTab />;
       case 'configuration':

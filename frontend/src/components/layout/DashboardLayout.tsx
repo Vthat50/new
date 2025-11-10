@@ -14,6 +14,7 @@ import {
   HelpCircle,
   TrendingUp,
   Target,
+  Workflow,
 } from 'lucide-react';
 import { colors, spacing, typography, layout } from '../../lib/design-system';
 
@@ -53,6 +54,7 @@ export default function DashboardLayout({ children, activeTab, onTabChange, demo
     { id: 'conversations', label: 'Conversations', icon: Phone },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'marketing', label: 'Marketing Insights', icon: TrendingUp },
+    { id: 'workflow-builder', label: 'Configuration 2.0', icon: Workflow },
     { id: 'configuration', label: 'Configuration', icon: Settings },
   ];
 
