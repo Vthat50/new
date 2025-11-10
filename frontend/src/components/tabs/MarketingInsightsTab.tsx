@@ -15,7 +15,7 @@ import {
   Globe,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 
 // Enterprise Design System
 const enterpriseColors = {
@@ -389,18 +389,20 @@ export default function MarketingInsightsTab() {
 
       // Stage 2: AI Analysis (30-100%)
       setProcessingStage('analyzing');
-      setProcessingMessage('Running AI analysis with Gemini...');
+      setProcessingMessage('Running AI analysis with OpenAI...');
       setProcessingProgress(40);
 
-      // Initialize Gemini
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      // Initialize OpenAI
+      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
 
       if (!apiKey) {
-        throw new Error('Gemini API key is not configured. Please add VITE_GEMINI_API_KEY to environment variables.');
+        throw new Error('OpenAI API key is not configured. Please add VITE_OPENAI_API_KEY to environment variables.');
       }
 
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+      const openai = new OpenAI({
+        apiKey: apiKey,
+        dangerouslyAllowBrowser: true // Note: In production, use a backend proxy
+      });
 
       // Define patient barriers from demo data
       const patientBarriers = [
@@ -435,19 +437,26 @@ Return ONLY a JSON object in this exact format:
 
       setProcessingProgress(60);
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are a marketing analyst that helps pharmaceutical companies understand how well their marketing aligns with patient needs. Always respond with valid JSON only."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        response_format: { type: "json_object" }
+      });
 
       setProcessingProgress(80);
 
-      // Parse JSON from response
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('Could not parse Gemini response');
-      }
-
-      const analysisData = JSON.parse(jsonMatch[0]);
+      const text = completion.choices[0].message.content || '{}';
+      const analysisData = JSON.parse(text);
 
       setProcessingProgress(95);
       setProcessingMessage('Finalizing analysis...');
@@ -489,10 +498,10 @@ Return ONLY a JSON object in this exact format:
 
       let errorMessage = 'Error analyzing websites.';
 
-      if (error.message?.includes('API key not valid') || error.message?.includes('API_KEY_INVALID')) {
-        errorMessage = 'Invalid Gemini API key. Please check:\n\n1. Go to https://makersuite.google.com/app/apikey\n2. Create or verify your API key\n3. Update VITE_GEMINI_API_KEY in Vercel environment variables\n4. Redeploy the application';
+      if (error.message?.includes('Invalid API Key') || error.message?.includes('Incorrect API key')) {
+        errorMessage = 'Invalid OpenAI API key. Please check:\n\n1. Go to https://platform.openai.com/api-keys\n2. Create or verify your API key\n3. Update VITE_OPENAI_API_KEY in Vercel environment variables\n4. Redeploy the application';
       } else if (error.message?.includes('not configured')) {
-        errorMessage = 'Gemini API key not configured. Please add VITE_GEMINI_API_KEY to environment variables.';
+        errorMessage = 'OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to environment variables.';
       } else if (error.message?.includes('All proxies failed')) {
         errorMessage = 'Could not fetch website content. The website may be blocking automated access.';
       }
