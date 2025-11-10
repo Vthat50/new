@@ -1197,27 +1197,30 @@ Return ONLY valid JSON (no other text):
                   </div>
                 ))}
 
-                <div className="pt-4 border-t" style={{ borderColor: enterpriseColors.neutral[200] }}>
-                  <p className="text-xs font-semibold mb-2" style={{ color: enterpriseColors.neutral[900] }}>
-                    UNDERREPRESENTED TOPICS
-                  </p>
-                  {marketingFocus.filter(item => item.percentage === 0).map((item) => (
-                    <div key={item.topic} className="flex items-center justify-between py-2">
-                      <span className="text-sm" style={{ color: enterpriseColors.neutral[600] }}>
-                        {item.topic}
-                      </span>
-                      <span
-                        className="text-xs font-semibold px-2 py-1 rounded"
-                        style={{
-                          backgroundColor: enterpriseColors.danger[100],
-                          color: enterpriseColors.danger[700],
-                        }}
-                      >
-                        0%
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                {/* Only show underrepresented topics if there are any with 0% or very low % */}
+                {marketingFocus.filter(item => item.percentage <= 2).length > 0 && (
+                  <div className="pt-4 border-t" style={{ borderColor: enterpriseColors.neutral[200] }}>
+                    <p className="text-xs font-semibold mb-2" style={{ color: enterpriseColors.neutral[900] }}>
+                      UNDERREPRESENTED TOPICS (&lt;3%)
+                    </p>
+                    {marketingFocus.filter(item => item.percentage <= 2).map((item) => (
+                      <div key={item.topic} className="flex items-center justify-between py-2">
+                        <span className="text-sm" style={{ color: enterpriseColors.neutral[600] }}>
+                          {item.topic}
+                        </span>
+                        <span
+                          className="text-xs font-semibold px-2 py-1 rounded"
+                          style={{
+                            backgroundColor: enterpriseColors.danger[100],
+                            color: enterpriseColors.danger[700],
+                          }}
+                        >
+                          {item.percentage}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
