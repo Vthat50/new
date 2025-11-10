@@ -1405,30 +1405,37 @@ Return ONLY a JSON object in this exact format:
                     What your website emphasizes:
                   </p>
                   <div className="space-y-3">
-                    {marketingFocus
-                      .sort((a, b) => b.percentage - a.percentage)
-                      .slice(0, 5)
-                      .map((item, index) => (
-                        <div key={index} className="flex items-center justify-between">
-                          <span className="text-sm font-medium" style={{ color: enterpriseColors.neutral[700] }}>
-                            {item.topic}
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <div className="w-24 h-2 rounded-full" style={{ backgroundColor: enterpriseColors.neutral[200] }}>
-                              <div
-                                className="h-2 rounded-full"
-                                style={{
-                                  width: `${item.percentage}%`,
-                                  backgroundColor: enterpriseColors.primary[500],
-                                }}
-                              />
-                            </div>
-                            <span className="text-sm font-semibold w-10 text-right" style={{ color: enterpriseColors.neutral[900] }}>
-                              {item.percentage}%
+                    {marketingFocus.length > 0 ? (
+                      marketingFocus
+                        .filter(item => item.percentage > 0)
+                        .sort((a, b) => b.percentage - a.percentage)
+                        .slice(0, 5)
+                        .map((item, index) => (
+                          <div key={index} className="flex items-center justify-between">
+                            <span className="text-sm font-medium" style={{ color: enterpriseColors.neutral[700] }}>
+                              {item.topic}
                             </span>
+                            <div className="flex items-center gap-2">
+                              <div className="w-24 h-2 rounded-full" style={{ backgroundColor: enterpriseColors.neutral[200] }}>
+                                <div
+                                  className="h-2 rounded-full"
+                                  style={{
+                                    width: `${Math.min(100, item.percentage)}%`,
+                                    backgroundColor: enterpriseColors.primary[500],
+                                  }}
+                                />
+                              </div>
+                              <span className="text-sm font-semibold w-10 text-right" style={{ color: enterpriseColors.neutral[900] }}>
+                                {Math.round(item.percentage)}%
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))
+                    ) : (
+                      <p className="text-sm italic" style={{ color: enterpriseColors.neutral[500] }}>
+                        No marketing topics detected. The website may not have analyzable content.
+                      </p>
+                    )}
                   </div>
                 </div>
 
