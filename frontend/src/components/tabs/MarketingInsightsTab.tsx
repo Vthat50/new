@@ -335,14 +335,42 @@ export default function MarketingInsightsTab() {
         setProcessingProgress(Math.floor((i / websiteLinks.length) * 30));
 
         try {
-          // Use AllOrigins CORS proxy to fetch website content
-          const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(websiteLinks[i])}`;
-          const response = await fetch(proxyUrl);
-          const data = await response.json();
+          // Try multiple CORS proxies in order
+          const proxies = [
+            `https://api.allorigins.win/raw?url=${encodeURIComponent(websiteLinks[i])}`,
+            `https://corsproxy.io/?${encodeURIComponent(websiteLinks[i])}`,
+            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(websiteLinks[i])}`
+          ];
+
+          let html = '';
+          for (const proxyUrl of proxies) {
+            try {
+              const response = await fetch(proxyUrl, {
+                method: 'GET',
+                headers: { 'Accept': 'text/html' }
+              });
+
+              if (response.ok) {
+                html = await response.text();
+                break;
+              }
+            } catch (proxyError) {
+              console.log(`Proxy failed, trying next...`);
+              continue;
+            }
+          }
+
+          if (!html) {
+            throw new Error('All proxies failed');
+          }
 
           // Extract text content from HTML
           const parser = new DOMParser();
-          const doc = parser.parseFromString(data.contents, 'text/html');
+          const doc = parser.parseFromString(html, 'text/html');
+
+          // Remove script and style elements
+          doc.querySelectorAll('script, style, nav, header, footer').forEach(el => el.remove());
+
           const text = doc.body.textContent || '';
 
           // Clean and limit text
@@ -365,7 +393,13 @@ export default function MarketingInsightsTab() {
       setProcessingProgress(40);
 
       // Initialize Gemini
-      const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+      if (!apiKey) {
+        throw new Error('Gemini API key is not configured. Please add VITE_GEMINI_API_KEY to environment variables.');
+      }
+
+      const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
       // Define patient barriers from demo data
@@ -447,12 +481,23 @@ Return ONLY a JSON object in this exact format:
         setProcessingProgress(0);
       }, 1000);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error analyzing websites:', error);
       setProcessingStage('idle');
       setProcessingProgress(0);
       setProcessingMessage('');
-      alert('Error analyzing websites. Please check the console for details.');
+
+      let errorMessage = 'Error analyzing websites.';
+
+      if (error.message?.includes('API key not valid') || error.message?.includes('API_KEY_INVALID')) {
+        errorMessage = 'Invalid Gemini API key. Please check:\n\n1. Go to https://makersuite.google.com/app/apikey\n2. Create or verify your API key\n3. Update VITE_GEMINI_API_KEY in Vercel environment variables\n4. Redeploy the application';
+      } else if (error.message?.includes('not configured')) {
+        errorMessage = 'Gemini API key not configured. Please add VITE_GEMINI_API_KEY to environment variables.';
+      } else if (error.message?.includes('All proxies failed')) {
+        errorMessage = 'Could not fetch website content. The website may be blocking automated access.';
+      }
+
+      alert(errorMessage);
     }
   };
 
