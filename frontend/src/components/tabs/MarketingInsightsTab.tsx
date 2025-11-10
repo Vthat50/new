@@ -1502,13 +1502,7 @@ Return ONLY valid JSON (no other text):
                       .sort((a, b) => a.gap - b.gap) // Most negative first
                       .slice(0, 3);
 
-                    // Find over-emphasized areas (marketing > patient need)
-                    const overEmphasized = gapData
-                      .filter(g => g.gap > 10) // Positive gap = over-emphasized
-                      .sort((a, b) => b.gap - a.gap) // Most positive first
-                      .slice(0, 2);
-
-                    if (underservedGaps.length === 0 && overEmphasized.length === 0) {
+                    if (underservedGaps.length === 0) {
                       return (
                         <p className="text-sm" style={{ color: enterpriseColors.neutral[700] }}>
                           Your marketing content is well-aligned with patient needs! Continue monitoring for changes.
@@ -1522,48 +1516,23 @@ Return ONLY valid JSON (no other text):
                           <strong>Current Focus:</strong> Your marketing primarily emphasizes {marketingName.toLowerCase()} ({topMarketing?.percentage || 0}%).
                         </p>
 
-                        {underservedGaps.length > 0 && (
-                          <>
-                            <p className="text-sm font-semibold mt-3" style={{ color: enterpriseColors.danger[700] }}>
-                              Critical Gaps - Patients Need More Help With:
-                            </p>
-                            <ul className="text-sm space-y-1 ml-4" style={{ color: enterpriseColors.neutral[700] }}>
-                              {underservedGaps.map((gap, idx) => (
-                                <li key={idx}>
-                                  • <strong>{gap.category}</strong> - Patients: {gap.patient_barrier}%, Marketing: {gap.marketing}%
-                                  (Gap: {Math.abs(gap.gap)}%)
-                                </li>
-                              ))}
-                            </ul>
-                          </>
-                        )}
-
-                        {overEmphasized.length > 0 && (
-                          <>
-                            <p className="text-sm font-semibold mt-3" style={{ color: enterpriseColors.warning[700] }}>
-                              Over-Emphasized Topics - Consider Reducing:
-                            </p>
-                            <ul className="text-sm space-y-1 ml-4" style={{ color: enterpriseColors.neutral[700] }}>
-                              {overEmphasized.map((gap, idx) => (
-                                <li key={idx}>
-                                  • <strong>{gap.category}</strong> - Marketing: {gap.marketing}%, Patients: {gap.patient_barrier}%
-                                  (Over-emphasis: {gap.gap}%)
-                                </li>
-                              ))}
-                            </ul>
-                          </>
-                        )}
+                        <p className="text-sm font-semibold mt-3" style={{ color: enterpriseColors.danger[700] }}>
+                          Critical Gaps - Patients Need More Help With:
+                        </p>
+                        <ul className="text-sm space-y-1 ml-4" style={{ color: enterpriseColors.neutral[700] }}>
+                          {underservedGaps.map((gap, idx) => (
+                            <li key={idx}>
+                              • <strong>{gap.category}</strong> - Patients: {gap.patient_barrier}%, Marketing: {gap.marketing}%
+                              (Gap: {Math.abs(gap.gap)}%)
+                            </li>
+                          ))}
+                        </ul>
 
                         <p className="text-sm font-semibold mt-3 p-3 rounded" style={{
                           color: enterpriseColors.primary[700],
                           backgroundColor: enterpriseColors.primary[50]
                         }}>
-                          💡 Recommendation: {underservedGaps.length > 0
-                            ? `Focus on adding content about ${underservedGaps.map(g => g.category.toLowerCase()).join(', ')}. `
-                            : ''}
-                          {overEmphasized.length > 0
-                            ? `Reduce emphasis on ${overEmphasized.map(g => g.category.toLowerCase()).join(' and ')} to reallocate resources.`
-                            : ''}
+                          💡 Recommendation: Add more content about {underservedGaps.map(g => g.category.toLowerCase()).join(', ')} to better address patient needs.
                         </p>
                       </>
                     );
