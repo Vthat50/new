@@ -16,6 +16,8 @@ export default function VoiceAgent() {
     const apiKey = import.meta.env.VITE_VAPI_API_KEY;
     const agentId = import.meta.env.VITE_VAPI_AGENT_ID;
 
+    // Diagnostic: Log all environment variables
+    console.log('ALL ENV VARS:', import.meta.env);
     console.log('Environment check:', {
       hasApiKey: !!apiKey,
       hasAgentId: !!agentId,
