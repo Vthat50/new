@@ -48,34 +48,143 @@ export default function OutcomesTab() {
 
   const loadData = async () => {
     setLoading(true);
-    try {
-      const endDate = new Date().toISOString();
-      const startDate = new Date(Date.now() - parseInt(selectedDateRange) * 24 * 60 * 60 * 1000).toISOString();
 
-      const [effectiveness, curves] = await Promise.all([
-        api.get(`/api/outcomes/intervention-effectiveness?start_date=${startDate}&end_date=${endDate}`),
-        api.get(`/api/outcomes/time-to-abandonment`),
-      ]);
+    // Hardcoded mock data
+    setTimeout(() => {
+      setEffectivenessData({
+        summary: {
+          total_interventions: 234,
+          total_revenue_saved: 8750000,
+          total_cost: 15650,
+          overall_roi: 55800
+        },
+        by_intervention_type: [
+          {
+            intervention_type: "copay_enrollment",
+            total_interventions: 87,
+            unique_patients: 87,
+            adherence_rate_with_intervention: 75.2,
+            adherence_rate_without_intervention: 45.1,
+            improvement_percentage: 30.1,
+            patients_retained: 26.2,
+            revenue_saved: 3930000,
+            total_cost: 3915,
+            roi_percentage: 100300,
+            cost_per_intervention: 45
+          },
+          {
+            intervention_type: "prior_auth_support",
+            total_interventions: 52,
+            unique_patients: 52,
+            adherence_rate_with_intervention: 78.4,
+            adherence_rate_without_intervention: 45.1,
+            improvement_percentage: 33.3,
+            patients_retained: 17.3,
+            revenue_saved: 2595000,
+            total_cost: 6240,
+            roi_percentage: 41470,
+            cost_per_intervention: 120
+          },
+          {
+            intervention_type: "nurse_callback",
+            total_interventions: 63,
+            unique_patients: 63,
+            adherence_rate_with_intervention: 70.5,
+            adherence_rate_without_intervention: 45.1,
+            improvement_percentage: 25.4,
+            patients_retained: 16.0,
+            revenue_saved: 2400000,
+            total_cost: 4725,
+            roi_percentage: 50700,
+            cost_per_intervention: 75
+          },
+          {
+            intervention_type: "educational_material",
+            total_interventions: 32,
+            unique_patients: 32,
+            adherence_rate_with_intervention: 62.8,
+            adherence_rate_without_intervention: 45.1,
+            improvement_percentage: 17.7,
+            patients_retained: 5.7,
+            revenue_saved: 855000,
+            total_cost: 480,
+            roi_percentage: 178025,
+            cost_per_intervention: 15
+          },
+        ]
+      });
 
-      setEffectivenessData(effectiveness.data);
-      setAbandonmentCurves(curves.data);
-    } catch (error) {
-      console.error('Failed to load outcomes data:', error);
-    } finally {
+      setAbandonmentCurves({
+        time_points_days: [0, 30, 60, 90, 120, 150, 180],
+        survival_curves: {
+          copay_enrollment: [
+            { days: 0, adherence_rate: 100 },
+            { days: 30, adherence_rate: 90 },
+            { days: 60, adherence_rate: 85 },
+            { days: 90, adherence_rate: 80 },
+            { days: 120, adherence_rate: 78 },
+            { days: 150, adherence_rate: 75 },
+            { days: 180, adherence_rate: 73 }
+          ],
+          nurse_callback: [
+            { days: 0, adherence_rate: 100 },
+            { days: 30, adherence_rate: 88 },
+            { days: 60, adherence_rate: 82 },
+            { days: 90, adherence_rate: 77 },
+            { days: 120, adherence_rate: 74 },
+            { days: 150, adherence_rate: 71 },
+            { days: 180, adherence_rate: 69 }
+          ],
+          educational_material: [
+            { days: 0, adherence_rate: 100 },
+            { days: 30, adherence_rate: 82 },
+            { days: 60, adherence_rate: 72 },
+            { days: 90, adherence_rate: 65 },
+            { days: 120, adherence_rate: 60 },
+            { days: 150, adherence_rate: 57 },
+            { days: 180, adherence_rate: 55 }
+          ],
+          no_intervention: [
+            { days: 0, adherence_rate: 100 },
+            { days: 30, adherence_rate: 75 },
+            { days: 60, adherence_rate: 60 },
+            { days: 90, adherence_rate: 48 },
+            { days: 120, adherence_rate: 40 },
+            { days: 150, adherence_rate: 35 },
+            { days: 180, adherence_rate: 32 }
+          ]
+        }
+      });
+
       setLoading(false);
-    }
+    }, 500);
   };
 
   const calculateROI = async () => {
-    try {
-      const params = new URLSearchParams(
-        Object.entries(roiInputs).map(([key, value]) => [key, value.toString()])
-      );
-      const response = await api.get(`/api/outcomes/roi-calculator?${params}`);
-      setRoiResults(response.data);
-    } catch (error) {
-      console.error('Failed to calculate ROI:', error);
-    }
+    // Hardcoded ROI calculation
+    const patientsRetained = roiInputs.interventions_count * ((roiInputs.intervention_adherence - roiInputs.baseline_adherence) / 100);
+    const revenueSaved = patientsRetained * roiInputs.annual_revenue_per_patient;
+    const totalCost = roiInputs.interventions_count * roiInputs.intervention_cost;
+    const netBenefit = revenueSaved - totalCost;
+    const roiPercentage = totalCost > 0 ? (netBenefit / totalCost * 100) : 0;
+    const paybackMonths = (revenueSaved / 12) > 0 ? totalCost / (revenueSaved / 12) : 0;
+
+    setRoiResults({
+      inputs: roiInputs,
+      results: {
+        patients_retained: patientsRetained,
+        revenue_saved: revenueSaved,
+        total_cost: totalCost,
+        net_benefit: netBenefit,
+        roi_percentage: roiPercentage,
+        payback_period_months: paybackMonths
+      },
+      per_patient: {
+        revenue_per_retained_patient: roiInputs.annual_revenue_per_patient,
+        cost_per_patient: roiInputs.intervention_cost,
+        net_value_per_patient: (revenueSaved - totalCost) / roiInputs.interventions_count
+      }
+    });
   };
 
   if (loading) {

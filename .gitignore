@@ -52,3 +52,4 @@ build/
 *.egg-info/
 .pytest_cache/
 .vercel
+/Users/varsha/Documents/new/frontend/.env

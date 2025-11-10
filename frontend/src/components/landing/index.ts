@@ -1,0 +1,10 @@
+export { default as LandingPage } from './LandingPage';
+export { default as Navigation } from './Navigation';
+export { default as Hero } from './Hero';
+export { default as ProblemStatement } from './ProblemStatement';
+export { default as Features } from './Features';
+export { default as Dashboard } from './Dashboard';
+export { default as Analytics } from './Analytics';
+export { default as WhyNow } from './WhyNow';
+export { default as CTA } from './CTA';
+export { default as Footer } from './Footer';
