@@ -126,103 +126,102 @@ export default function MarketingInsightsTab() {
   });
 
   useEffect(() => {
-    loadData();
+    // Only load initial KPIs, not the full data
+    loadInitialKPIs();
   }, [selectedDateRange]);
 
-  const loadData = async () => {
+  const loadInitialKPIs = () => {
     setLoading(true);
-
-    // Simulate API call
     setTimeout(() => {
-      // KPIs
       setKpis({
         total_calls: 287,
         revenue_at_risk: 8700000,
         potential_recovery: 40,
         alignment_score: 42,
       });
-
-      // Patient barriers (from actual call data)
-      setBarrierData([
-        { name: 'Cost & Insurance Issues', percentage: 34, priority: 'HIGH', count: 98 },
-        { name: 'Injection Anxiety', percentage: 19, priority: 'HIGH', count: 55 },
-        { name: 'Side Effect Concerns', percentage: 15, priority: 'MEDIUM', count: 43 },
-        { name: 'Access & Logistics', percentage: 12, priority: 'MEDIUM', count: 34 },
-        { name: 'Efficacy Questions', percentage: 8, priority: 'LOW', count: 23 },
-        { name: 'Administration Complexity', percentage: 7, priority: 'LOW', count: 20 },
-        { name: 'Other', percentage: 5, priority: 'LOW', count: 14 },
-      ]);
-
-      // Marketing focus (from content analysis)
-      setMarketingFocus([
-        { topic: 'Efficacy & Clinical Results', percentage: 45, alignment: 18 },
-        { topic: 'Dosing Convenience', percentage: 30, alignment: 55 },
-        { topic: 'Quality of Life', percentage: 25, alignment: 48 },
-        { topic: 'Cost Support Programs', percentage: 0, alignment: 0 },
-        { topic: 'Injection Training', percentage: 0, alignment: 0 },
-      ]);
-
-      // Gap analysis data (diverging bar chart)
-      setGapData([
-        { category: 'Cost Support', marketing: 0, patient_barrier: 34, gap: -34 },
-        { category: 'Injection Training', marketing: 0, patient_barrier: 19, gap: -19 },
-        { category: 'Side Effects', marketing: 0, patient_barrier: 15, gap: -15 },
-        { category: 'Efficacy', marketing: 45, patient_barrier: 8, gap: 37 },
-        { category: 'Dosing', marketing: 30, patient_barrier: 7, gap: 23 },
-        { category: 'Quality of Life', marketing: 25, patient_barrier: 0, gap: 25 },
-      ]);
-
-      // AI-generated insights (tabular format)
-      setInsights([
-        {
-          id: '1',
-          category: 'Cost Support',
-          finding: '34% of patient barriers are cost-related while 0% of marketing addresses this',
-          impact: '$2.95M revenue at risk',
-          confidence: 94,
-          priority: 'HIGH',
-          action: 'Increase cost support messaging by 30-35%'
-        },
-        {
-          id: '2',
-          category: 'Injection Training',
-          finding: '19% experience injection anxiety with no current support content',
-          impact: '$1.65M revenue at risk',
-          confidence: 89,
-          priority: 'HIGH',
-          action: 'Launch injection training video series'
-        },
-        {
-          id: '3',
-          category: 'Efficacy',
-          finding: '45% of marketing focuses on efficacy but only 8% of patients question this',
-          impact: '$890K budget reallocation opportunity',
-          confidence: 91,
-          priority: 'MEDIUM',
-          action: 'Reduce efficacy messaging by 30 percentage points'
-        },
-        {
-          id: '4',
-          category: 'Side Effects',
-          finding: '15% of patients concerned about side effects with no dedicated content',
-          impact: '$1.30M revenue at risk',
-          confidence: 86,
-          priority: 'MEDIUM',
-          action: 'Create side effect management resource hub'
-        },
-      ]);
-
-      // Geographic hotspots
-      setGeographicData([
-        { state: 'CA', patient_count: 89, risk_score: 68, abandonment_rate: 42, top_barrier: 'Cost', barrier_count: 45 },
-        { state: 'TX', patient_count: 67, risk_score: 62, abandonment_rate: 38, top_barrier: 'Cost', barrier_count: 38 },
-        { state: 'FL', patient_count: 54, risk_score: 59, abandonment_rate: 35, top_barrier: 'Access', barrier_count: 32 },
-        { state: 'NY', patient_count: 48, risk_score: 55, abandonment_rate: 31, top_barrier: 'Insurance', barrier_count: 28 },
-        { state: 'PA', patient_count: 42, risk_score: 52, abandonment_rate: 28, top_barrier: 'Cost', barrier_count: 25 },
-      ]);
-
       setLoading(false);
     }, 400);
+  };
+
+  const loadAnalysisData = () => {
+    // Patient barriers (from actual call data)
+    setBarrierData([
+      { name: 'Cost & Insurance Issues', percentage: 34, priority: 'HIGH', count: 98 },
+      { name: 'Injection Anxiety', percentage: 19, priority: 'HIGH', count: 55 },
+      { name: 'Side Effect Concerns', percentage: 15, priority: 'MEDIUM', count: 43 },
+      { name: 'Access & Logistics', percentage: 12, priority: 'MEDIUM', count: 34 },
+      { name: 'Efficacy Questions', percentage: 8, priority: 'LOW', count: 23 },
+      { name: 'Administration Complexity', percentage: 7, priority: 'LOW', count: 20 },
+      { name: 'Other', percentage: 5, priority: 'LOW', count: 14 },
+    ]);
+
+    // Marketing focus (from content analysis)
+    setMarketingFocus([
+      { topic: 'Efficacy & Clinical Results', percentage: 45, alignment: 18 },
+      { topic: 'Dosing Convenience', percentage: 30, alignment: 55 },
+      { topic: 'Quality of Life', percentage: 25, alignment: 48 },
+      { topic: 'Cost Support Programs', percentage: 0, alignment: 0 },
+      { topic: 'Injection Training', percentage: 0, alignment: 0 },
+    ]);
+
+    // Gap analysis data (diverging bar chart)
+    setGapData([
+      { category: 'Cost Support', marketing: 0, patient_barrier: 34, gap: -34 },
+      { category: 'Injection Training', marketing: 0, patient_barrier: 19, gap: -19 },
+      { category: 'Side Effects', marketing: 0, patient_barrier: 15, gap: -15 },
+      { category: 'Efficacy', marketing: 45, patient_barrier: 8, gap: 37 },
+      { category: 'Dosing', marketing: 30, patient_barrier: 7, gap: 23 },
+      { category: 'Quality of Life', marketing: 25, patient_barrier: 0, gap: 25 },
+    ]);
+
+    // AI-generated insights (tabular format)
+    setInsights([
+      {
+        id: '1',
+        category: 'Cost Support',
+        finding: '34% of patient barriers are cost-related while 0% of marketing addresses this',
+        impact: '$2.95M revenue at risk',
+        confidence: 94,
+        priority: 'HIGH',
+        action: 'Increase cost support messaging by 30-35%'
+      },
+      {
+        id: '2',
+        category: 'Injection Training',
+        finding: '19% experience injection anxiety with no current support content',
+        impact: '$1.65M revenue at risk',
+        confidence: 89,
+        priority: 'HIGH',
+        action: 'Launch injection training video series'
+      },
+      {
+        id: '3',
+        category: 'Efficacy',
+        finding: '45% of marketing focuses on efficacy but only 8% of patients question this',
+        impact: '$890K budget reallocation opportunity',
+        confidence: 91,
+        priority: 'MEDIUM',
+        action: 'Reduce efficacy messaging by 30 percentage points'
+      },
+      {
+        id: '4',
+        category: 'Side Effects',
+        finding: '15% of patients concerned about side effects with no dedicated content',
+        impact: '$1.30M revenue at risk',
+        confidence: 86,
+        priority: 'MEDIUM',
+        action: 'Create side effect management resource hub'
+        },
+    ]);
+
+    // Geographic hotspots
+    setGeographicData([
+      { state: 'CA', patient_count: 89, risk_score: 68, abandonment_rate: 42, top_barrier: 'Cost', barrier_count: 45 },
+      { state: 'TX', patient_count: 67, risk_score: 62, abandonment_rate: 38, top_barrier: 'Cost', barrier_count: 38 },
+      { state: 'FL', patient_count: 54, risk_score: 59, abandonment_rate: 35, top_barrier: 'Access', barrier_count: 32 },
+      { state: 'NY', patient_count: 48, risk_score: 55, abandonment_rate: 31, top_barrier: 'Insurance', barrier_count: 28 },
+      { state: 'PA', patient_count: 42, risk_score: 52, abandonment_rate: 28, top_barrier: 'Cost', barrier_count: 25 },
+    ]);
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -275,7 +274,10 @@ export default function MarketingInsightsTab() {
         analyzed_at: new Date().toISOString(),
       });
 
-      // Update marketing focus with analyzed data
+      // Load all analysis data after processing is complete
+      loadAnalysisData();
+
+      // Update marketing focus with analyzed data (overwrites the default from loadAnalysisData)
       setMarketingFocus([
         { topic: 'Efficacy & Clinical Results', percentage: 48, alignment: 17 },
         { topic: 'Dosing Convenience', percentage: 28, alignment: 58 },
@@ -598,28 +600,29 @@ export default function MarketingInsightsTab() {
             )}
           </div>
 
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Patient Barriers */}
-            <div
-              className="bg-white rounded-lg border p-6"
-              style={{
-                borderColor: enterpriseColors.neutral[200],
-                boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08)',
-              }}
-            >
-              <div className="flex items-center gap-2 mb-6">
-                <AlertTriangle size={20} style={{ color: enterpriseColors.danger[600] }} />
-                <h2 className="text-xl font-semibold" style={{ color: enterpriseColors.neutral[900] }}>
-                  Patient Barriers
-                </h2>
-              </div>
-              <p className="text-sm mb-6" style={{ color: enterpriseColors.neutral[600] }}>
-                From patient support call analysis
-              </p>
+          {/* Main Content Grid - Only show after file upload */}
+          {barrierData.length > 0 && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Patient Barriers */}
+              <div
+                className="bg-white rounded-lg border p-6"
+                style={{
+                  borderColor: enterpriseColors.neutral[200],
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08)',
+                }}
+              >
+                <div className="flex items-center gap-2 mb-6">
+                  <AlertTriangle size={20} style={{ color: enterpriseColors.danger[600] }} />
+                  <h2 className="text-xl font-semibold" style={{ color: enterpriseColors.neutral[900] }}>
+                    Patient Barriers
+                  </h2>
+                </div>
+                <p className="text-sm mb-6" style={{ color: enterpriseColors.neutral[600] }}>
+                  From patient support call analysis
+                </p>
 
-              <div className="space-y-4">
-                {barrierData.map((item) => {
+                <div className="space-y-4">
+                  {barrierData.map((item) => {
                   const priorityColors = {
                     HIGH: { bg: enterpriseColors.danger[50], text: enterpriseColors.danger[700], border: enterpriseColors.danger[300] },
                     MEDIUM: { bg: enterpriseColors.warning[50], text: enterpriseColors.warning[700], border: enterpriseColors.warning[300] },
@@ -741,8 +744,10 @@ export default function MarketingInsightsTab() {
               </div>
             </div>
           </div>
+          )}
 
-          {/* Diverging Bar Chart - Gap Analysis */}
+          {/* Diverging Bar Chart - Gap Analysis - Only show after file upload */}
+          {gapData.length > 0 && (
           <div
             className="bg-white rounded-lg border p-6"
             style={{
@@ -824,8 +829,10 @@ export default function MarketingInsightsTab() {
               </p>
             </div>
           </div>
+          )}
 
-          {/* AI-Generated Insights Table */}
+          {/* AI-Generated Insights Table - Only show after file upload */}
+          {insights.length > 0 && (
           <div
             className="bg-white rounded-lg border overflow-hidden"
             style={{
@@ -942,11 +949,12 @@ export default function MarketingInsightsTab() {
               </table>
             </div>
           </div>
+          )}
         </div>
       )}
 
       {/* Geographic View */}
-      {activeView === 'geographic' && (
+      {activeView === 'geographic' && geographicData.length > 0 && (
         <div className="space-y-8">
           {/* Geographic Hotspots Table */}
           <div
