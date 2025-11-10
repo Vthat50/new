@@ -1,103 +1,23 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, Phone, PhoneOff, Volume2, Loader2 } from 'lucide-react';
-import Vapi from '@vapi-ai/web';
+import { Conversation } from '@elevenlabs/client';
 
 export default function VoiceAgent() {
   const [isCallActive, setIsCallActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [transcript, setTranscript] = useState('');
   const [error, setError] = useState('');
-  const vapiRef = useRef<Vapi | null>(null);
+  const conversationRef = useRef<Conversation | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
-    // Diagnostic: Check what env vars are available
-    const allEnvVars = Object.keys(import.meta.env);
-    console.log('ALL ENV VARS:', import.meta.env);
-    console.log('Available env var keys:', allEnvVars);
-
-    // Initialize Vapi
-    const apiKey = import.meta.env.VITE_VAPI_API_KEY;
-    const agentId = import.meta.env.VITE_VAPI_AGENT_ID;
-
-    console.log('Environment check:', {
-      hasApiKey: !!apiKey,
-      hasAgentId: !!agentId,
-      apiKeyPrefix: apiKey?.substring(0, 10) + '...',
-      agentIdPrefix: agentId?.substring(0, 15) + '...',
-      envVarCount: allEnvVars.length,
-      mode: import.meta.env.MODE,
-      dev: import.meta.env.DEV,
-      prod: import.meta.env.PROD
-    });
-
-    if (!apiKey) {
-      setError('API key not configured');
-      console.error('VITE_VAPI_API_KEY environment variable is missing');
-      return;
-    }
-
-    if (!agentId) {
-      setError('Agent ID not configured');
-      console.error('VITE_VAPI_AGENT_ID environment variable is missing');
-      return;
-    }
-
-    try {
-      vapiRef.current = new Vapi(apiKey);
-      console.log('Vapi initialized successfully');
-    } catch (err) {
-      console.error('Failed to initialize Vapi:', err);
-      setError('Failed to initialize voice agent');
-      return;
-    }
-
-    // Set up event listeners
-    const vapi = vapiRef.current;
-
-    vapi.on('call-start', () => {
-      setIsCallActive(true);
-      setIsLoading(false);
-      setError('');
-    });
-
-    vapi.on('call-end', () => {
-      setIsCallActive(false);
-      setIsSpeaking(false);
-      setTranscript('');
-    });
-
-    vapi.on('speech-start', () => {
-      setIsSpeaking(true);
-    });
-
-    vapi.on('speech-end', () => {
-      setIsSpeaking(false);
-    });
-
-    vapi.on('message', (message: any) => {
-      if (message.type === 'transcript' && message.transcriptType === 'partial') {
-        setTranscript(message.transcript);
-      }
-    });
-
-    vapi.on('error', (error: any) => {
-      console.error('Vapi error:', error);
-      console.error('Vapi error details:', {
-        message: error?.message,
-        code: error?.code,
-        statusCode: error?.statusCode,
-        error: JSON.stringify(error, null, 2)
-      });
-      setError(error?.message || 'Connection error. Please try again.');
-      setIsLoading(false);
-      setIsCallActive(false);
-    });
-
     return () => {
-      if (vapiRef.current) {
-        vapiRef.current.stop();
+      if (conversationRef.current) {
+        conversationRef.current.endSession();
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
       }
     };
   }, []);
@@ -107,18 +27,57 @@ export default function VoiceAgent() {
     setError('');
 
     try {
-      const agentId = import.meta.env.VITE_VAPI_AGENT_ID;
-      console.log('Starting call with agent ID:', agentId ? agentId.substring(0, 15) + '...' : 'NOT FOUND');
+      const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY;
+      const agentId = import.meta.env.VITE_ELEVENLABS_AGENT_ID;
+
+      console.log('Environment check:', {
+        hasApiKey: !!apiKey,
+        hasAgentId: !!agentId,
+        apiKeyPrefix: apiKey?.substring(0, 10) + '...',
+        agentIdPrefix: agentId?.substring(0, 15) + '...'
+      });
+
+      if (!apiKey) {
+        throw new Error('Eleven Labs API key not configured');
+      }
 
       if (!agentId) {
-        throw new Error('Agent ID not configured. Please check environment variables.');
+        throw new Error('Eleven Labs Agent ID not configured');
       }
 
-      if (!vapiRef.current) {
-        throw new Error('Vapi not initialized. Check API key.');
-      }
+      // Initialize audio context
+      audioContextRef.current = new AudioContext({ sampleRate: 16000 });
 
-      await vapiRef.current.start(agentId);
+      // Create conversation
+      const conversation = await Conversation.startSession({
+        agentId: agentId,
+        onConnect: () => {
+          console.log('Connected to Eleven Labs');
+          setIsCallActive(true);
+          setIsLoading(false);
+        },
+        onDisconnect: () => {
+          console.log('Disconnected from Eleven Labs');
+          setIsCallActive(false);
+          setIsSpeaking(false);
+        },
+        onError: (error) => {
+          console.error('Eleven Labs error:', error);
+          setError(error.message || 'Connection error');
+          setIsLoading(false);
+          setIsCallActive(false);
+        },
+        onModeChange: (mode) => {
+          console.log('Mode changed:', mode);
+          setIsSpeaking(mode.mode === 'speaking');
+        },
+      });
+
+      conversationRef.current = conversation;
+
+      // Set up audio playback
+      await conversation.startAudio(audioContextRef.current);
+
     } catch (err: any) {
       console.error('Failed to start call:', err);
       setError(err.message || 'Failed to start call');
@@ -126,11 +85,13 @@ export default function VoiceAgent() {
     }
   };
 
-  const endCall = () => {
-    vapiRef.current?.stop();
+  const endCall = async () => {
+    if (conversationRef.current) {
+      await conversationRef.current.endSession();
+      conversationRef.current = null;
+    }
     setIsCallActive(false);
     setIsSpeaking(false);
-    setTranscript('');
   };
 
   return (
@@ -242,11 +203,6 @@ export default function VoiceAgent() {
                     {isSpeaking ? 'AI is speaking...' : 'Listening...'}
                   </p>
                 </div>
-                {transcript && (
-                  <p className="text-xs text-gray-600 italic">
-                    You: {transcript}
-                  </p>
-                )}
               </motion.div>
             )}
             {!isCallActive && !isLoading && (
