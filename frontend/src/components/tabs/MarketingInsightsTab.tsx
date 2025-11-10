@@ -1462,16 +1462,42 @@ Return ONLY a JSON object in this exact format:
                 <p className="text-sm font-semibold mb-2" style={{ color: enterpriseColors.primary[700] }}>
                   Key Takeaway:
                 </p>
-                <p className="text-sm" style={{ color: enterpriseColors.neutral[700] }}>
+                <div className="space-y-2">
                   {(() => {
                     const topBarrier = barrierData[0];
+                    const secondBarrier = barrierData[1];
+                    const thirdBarrier = barrierData[2];
                     const topMarketing = marketingFocus.sort((a, b) => b.percentage - a.percentage)[0];
                     const barrierName = topBarrier?.name || 'patient concerns';
                     const marketingName = topMarketing?.topic || 'marketing content';
 
-                    return `Your marketing primarily focuses on ${marketingName.toLowerCase()} (${topMarketing?.percentage || 0}%), but ${topBarrier?.percentage || 0}% of patients struggle with ${barrierName.toLowerCase()}. Consider realigning your content strategy to address the most pressing patient needs.`;
+                    // Find marketing coverage for top barriers
+                    const topBarrierCoverage = gapData.find(g =>
+                      g.category.toLowerCase().includes(barrierName.toLowerCase().split(' ')[0])
+                    );
+
+                    return (
+                      <>
+                        <p className="text-sm" style={{ color: enterpriseColors.neutral[700] }}>
+                          <strong>Current Focus:</strong> Your marketing primarily emphasizes {marketingName.toLowerCase()} ({topMarketing?.percentage || 0}%),
+                          but this only addresses {topBarrier?.percentage || 0}% of patient concerns.
+                        </p>
+                        <p className="text-sm" style={{ color: enterpriseColors.neutral[700] }}>
+                          <strong>Top Patient Needs:</strong>
+                        </p>
+                        <ul className="text-sm space-y-1 ml-4" style={{ color: enterpriseColors.neutral[700] }}>
+                          <li>• <strong>{topBarrier?.name}</strong> - {topBarrier?.percentage}% of patients struggle with this</li>
+                          {secondBarrier && <li>• <strong>{secondBarrier.name}</strong> - {secondBarrier.percentage}% of patients</li>}
+                          {thirdBarrier && <li>• <strong>{thirdBarrier.name}</strong> - {thirdBarrier.percentage}% of patients</li>}
+                        </ul>
+                        <p className="text-sm font-semibold mt-3" style={{ color: enterpriseColors.primary[700] }}>
+                          Recommendation: Increase content about {barrierName.toLowerCase()}, {secondBarrier?.name.toLowerCase()},
+                          and {thirdBarrier?.name.toLowerCase()} to better align with what patients actually need help with.
+                        </p>
+                      </>
+                    );
                   })()}
-                </p>
+                </div>
               </div>
             </div>
           )}
