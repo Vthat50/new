@@ -379,6 +379,9 @@ export default function MarketingInsightsTab() {
 
           websiteContents.push(limitedText);
           totalWords += limitedText.split(' ').length;
+
+          // Log sample of fetched content for debugging
+          console.log(`Fetched content from ${websiteLinks[i]}:`, limitedText.substring(0, 500) + '...');
         } catch (error) {
           console.error(`Error fetching ${websiteLinks[i]}:`, error);
           websiteContents.push('');
@@ -386,6 +389,12 @@ export default function MarketingInsightsTab() {
       }
 
       setProcessingProgress(30);
+
+      console.log('Total content collected:', {
+        numberOfSites: websiteContents.length,
+        totalWords,
+        sampleOfFirstSite: websiteContents[0]?.substring(0, 300) + '...'
+      });
 
       // Stage 2: AI Analysis (30-100%)
       setProcessingStage('analyzing');
@@ -404,33 +413,62 @@ export default function MarketingInsightsTab() {
         dangerouslyAllowBrowser: true // Note: In production, use a backend proxy
       });
 
-      // Define patient barriers from demo data
+      // Define patient barriers from demo data - these are the categories we want OpenAI to analyze
       const patientBarriers = [
-        'Cost & Insurance Issues',
-        'Injection Anxiety',
-        'Side Effect Concerns',
-        'Access & Logistics',
-        'Efficacy Questions',
-        'Administration Complexity'
+        { name: 'Cost & Insurance Support', keywords: 'affordability, cost, pricing, insurance, copay, financial assistance, patient assistance programs' },
+        { name: 'Injection Support & Training', keywords: 'injection, self-administration, needle anxiety, injection training, how to inject' },
+        { name: 'Side Effects Management', keywords: 'side effects, adverse events, safety, tolerability, what to expect' },
+        { name: 'Access & Logistics', keywords: 'access, availability, delivery, logistics, pharmacy, specialty pharmacy' },
+        { name: 'Efficacy & Clinical Results', keywords: 'efficacy, effectiveness, clinical trials, results, outcomes, benefits' },
+        { name: 'Dosing & Convenience', keywords: 'dosing, dosing schedule, convenience, frequency, administration' }
       ];
 
-      const prompt = `Analyze the following marketing website content and determine what topics/themes are emphasized.
+      const prompt = `You are analyzing pharmaceutical website content. Determine what percentage of the content focuses on each category below.
 
-Patient Barriers (from real call data):
-${patientBarriers.map((b, i) => `${i + 1}. ${b}`).join('\n')}
+CRITICAL INSTRUCTIONS:
+1. Read the website content VERY carefully
+2. The percentages MUST add up to approximately 100%
+3. If a category is not mentioned AT ALL, use 0%
+4. Be REALISTIC - don't inflate numbers
 
-Website Content:
+CATEGORIES TO ANALYZE:
+
+1. Cost & Insurance Support (${patientBarriers[0].keywords})
+   - Look for: patient assistance programs, copay cards, financial help, eligibility for assistance, affordability programs, insurance coverage, cost reduction, "cares" programs, application for financial aid
+   - If the website is primarily about applying for financial assistance or a patient assistance program, this should be 80-90%
+
+2. Injection Support & Training (${patientBarriers[1].keywords})
+   - Look for: how to inject, injection techniques, self-administration guides, overcoming fear of needles, injection tutorials
+
+3. Side Effects Management (${patientBarriers[2].keywords})
+   - Look for: managing side effects, what to expect, adverse events, safety information, dealing with reactions
+
+4. Access & Logistics (${patientBarriers[3].keywords})
+   - Look for: where to get medication, pharmacy information, delivery, prescription fulfillment
+
+5. Efficacy & Clinical Results (${patientBarriers[4].keywords})
+   - Look for: how well the drug works, clinical trial data, effectiveness, treatment outcomes, scientific evidence
+
+6. Dosing & Convenience (${patientBarriers[5].keywords})
+   - Look for: how often to take/inject, dosing schedule, treatment regimen
+
+WEBSITE CONTENT TO ANALYZE:
 ${websiteContents.join('\n\n---\n\n')}
 
-Please analyze the marketing content and provide:
-1. The main marketing topics/themes and their approximate percentage of focus
-2. How well each topic aligns with the patient barriers above (0-100%)
+EXAMPLES:
+- If website is a patient assistance program (e.g., "LillyCares", "JanssenCares"), use ~85% Cost Support
+- If website is about clinical trials/efficacy, use ~60-70% Efficacy
+- If website is an injection training portal, use ~70-80% Injection Support
 
-Return ONLY a JSON object in this exact format:
+Return ONLY valid JSON (no other text):
 {
   "topics": [
-    {"name": "Topic Name", "percentage": 40, "alignment_with_barriers": 15},
-    ...
+    {"name": "Cost & Insurance Support", "percentage": 85},
+    {"name": "Injection Support & Training", "percentage": 0},
+    {"name": "Side Effects Management", "percentage": 5},
+    {"name": "Access & Logistics", "percentage": 10},
+    {"name": "Efficacy & Clinical Results", "percentage": 0},
+    {"name": "Dosing & Convenience", "percentage": 0}
   ],
   "total_words": ${totalWords}
 }`;
@@ -458,6 +496,8 @@ Return ONLY a JSON object in this exact format:
       const text = completion.choices[0].message.content || '{}';
       const analysisData = JSON.parse(text);
 
+      console.log('OpenAI Analysis Result:', analysisData);
+
       setProcessingProgress(95);
       setProcessingMessage('Finalizing analysis...');
 
@@ -475,53 +515,73 @@ Return ONLY a JSON object in this exact format:
       setBarrierData(patientBarriersData);
 
       // Update marketing focus with real analyzed data
-      const marketingTopics = analysisData.topics.map((topic: any) => ({
-        topic: topic.name,
-        percentage: topic.percentage,
-        alignment: topic.alignment_with_barriers
-      }));
+      // OpenAI now returns topics that exactly match our categories
+      const marketingTopics = (analysisData.topics || []).map((topic: any) => {
+        // Calculate alignment score based on how well marketing % matches patient barrier %
+        const matchingBarrier = patientBarriersData.find(b =>
+          b.name.toLowerCase().includes(topic.name.toLowerCase().split(' ')[0]) ||
+          topic.name.toLowerCase().includes(b.name.toLowerCase().split(' ')[0])
+        );
+        const alignmentScore = matchingBarrier
+          ? Math.max(0, 100 - Math.abs(topic.percentage - matchingBarrier.percentage) * 2)
+          : 0;
+
+        return {
+          topic: topic.name,
+          percentage: Math.round(topic.percentage) || 0,
+          alignment: Math.round(alignmentScore)
+        };
+      });
+
+      console.log('Processed Marketing Topics:', marketingTopics);
 
       setMarketingFocus(marketingTopics);
 
       // Calculate gap analysis dynamically
       const calculatedGaps: GapData[] = [];
 
-      // Create a map of patient barriers for easy lookup
-      const barrierMap = new Map(patientBarriersData.map(b => [b.name.toLowerCase(), b.percentage]));
-      const marketingMap = new Map(marketingTopics.map((m: any) => [m.topic.toLowerCase(), m.percentage]));
-
-      // Map similar topics
-      const topicMappings: Record<string, string[]> = {
-        'cost': ['cost', 'insurance', 'copay', 'pricing', 'affordability'],
-        'injection': ['injection', 'administration', 'needle', 'self-inject'],
-        'side effects': ['side effect', 'adverse', 'safety', 'tolerability'],
-        'efficacy': ['efficacy', 'effectiveness', 'clinical', 'results'],
-        'access': ['access', 'logistics', 'delivery', 'availability'],
-        'dosing': ['dosing', 'convenience', 'frequency']
-      };
-
-      // Calculate gaps for each major category
-      const categories = [
-        { key: 'cost', label: 'Cost Support', barrierName: 'Cost & Insurance Issues' },
-        { key: 'injection', label: 'Injection Support', barrierName: 'Injection Anxiety' },
-        { key: 'side effects', label: 'Side Effects', barrierName: 'Side Effect Concerns' },
-        { key: 'efficacy', label: 'Efficacy', barrierName: 'Efficacy Questions' },
-        { key: 'access', label: 'Access & Logistics', barrierName: 'Access & Logistics' },
-        { key: 'dosing', label: 'Dosing Convenience', barrierName: 'Administration Complexity' }
+      // Map OpenAI categories to patient barrier categories
+      const categoryMappings = [
+        {
+          label: 'Cost Support',
+          barrierName: 'Cost & Insurance Issues',
+          marketingName: 'Cost & Insurance Support'
+        },
+        {
+          label: 'Injection Support',
+          barrierName: 'Injection Anxiety',
+          marketingName: 'Injection Support & Training'
+        },
+        {
+          label: 'Side Effects',
+          barrierName: 'Side Effect Concerns',
+          marketingName: 'Side Effects Management'
+        },
+        {
+          label: 'Access & Logistics',
+          barrierName: 'Access & Logistics',
+          marketingName: 'Access & Logistics'
+        },
+        {
+          label: 'Efficacy',
+          barrierName: 'Efficacy Questions',
+          marketingName: 'Efficacy & Clinical Results'
+        },
+        {
+          label: 'Dosing Convenience',
+          barrierName: 'Administration Complexity',
+          marketingName: 'Dosing & Convenience'
+        }
       ];
 
-      categories.forEach(cat => {
-        const barrierPct = barrierMap.get(cat.barrierName.toLowerCase()) || 0;
+      categoryMappings.forEach(cat => {
+        // Find patient barrier percentage
+        const barrier = patientBarriersData.find(b => b.name === cat.barrierName);
+        const barrierPct = barrier?.percentage || 0;
 
-        // Find marketing percentage for this category
-        let marketingPct = 0;
-        const keywords = topicMappings[cat.key] || [cat.key];
-
-        for (const [topic, pct] of marketingMap.entries()) {
-          if (keywords.some(keyword => topic.includes(keyword))) {
-            marketingPct += pct;
-          }
-        }
+        // Find marketing percentage from OpenAI analysis
+        const marketingTopic = marketingTopics.find((m: any) => m.topic === cat.marketingName);
+        const marketingPct = marketingTopic?.percentage || 0;
 
         const gap = marketingPct - barrierPct;
         calculatedGaps.push({
