@@ -1369,13 +1369,17 @@ Return ONLY a JSON object in this exact format:
           )}
 
           {/* Executive Summary - Only show after analysis */}
-          {marketingFocus.length > 0 && barrierData.length > 0 && (() => {
-            console.log('Rendering Executive Summary:', {
+          {(() => {
+            const shouldShow = marketingFocus.length > 0 && barrierData.length > 0;
+            console.log('Executive Summary Check:', {
+              shouldShow,
               marketingFocusLength: marketingFocus.length,
               barrierDataLength: barrierData.length,
-              gapDataLength: gapData.length
+              gapDataLength: gapData.length,
+              marketingFocus,
+              barrierData
             });
-            return true;
+            return shouldShow;
           })() && (
             <div
               className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border p-8"
