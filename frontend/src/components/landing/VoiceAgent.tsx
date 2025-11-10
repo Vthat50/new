@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Phone, PhoneOff, Volume2, Loader2 } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-
 export default function VoiceAgent() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isCallActive, setIsCallActive] = useState(false);
@@ -21,25 +19,44 @@ export default function VoiceAgent() {
     setError('');
 
     try {
-      console.log('Initiating call to:', phoneNumber);
+      const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY;
+      const agentId = import.meta.env.VITE_ELEVENLABS_AGENT_ID;
+      const phoneNumberId = import.meta.env.VITE_ELEVENLABS_PHONE_NUMBER_ID;
 
-      const response = await fetch(`${API_URL}/api/calls/initiate-outbound-call`, {
+      if (!apiKey || !agentId || !phoneNumberId) {
+        throw new Error('Eleven Labs configuration is missing');
+      }
+
+      // Format phone number (ensure it starts with +)
+      let formattedNumber = phoneNumber.trim();
+      if (!formattedNumber.startsWith('+')) {
+        // Assume US number if no country code
+        formattedNumber = '+1' + formattedNumber.replace(/\D/g, '');
+      }
+
+      console.log('Initiating call to:', formattedNumber);
+
+      // Call Eleven Labs API directly
+      const response = await fetch('https://api.elevenlabs.io/v1/convai/twilio/outbound-call', {
         method: 'POST',
         headers: {
+          'xi-api-key': apiKey,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          phone_number: phoneNumber,
-          patient_name: 'Demo User',
+          agent_id: agentId,
+          agent_phone_number_id: phoneNumberId,
+          to_number: formattedNumber,
           metadata: {
+            patient_name: 'Demo User',
             source: 'landing_page',
           },
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: 'Failed to initiate call' }));
-        throw new Error(errorData.detail || `API Error: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ detail: { message: 'Failed to initiate call' } }));
+        throw new Error(errorData.detail?.message || `API Error: ${response.status}`);
       }
 
       const data = await response.json();
