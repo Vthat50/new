@@ -12,17 +12,24 @@ export default function VoiceAgent() {
   const vapiRef = useRef<Vapi | null>(null);
 
   useEffect(() => {
+    // Diagnostic: Check what env vars are available
+    const allEnvVars = Object.keys(import.meta.env);
+    console.log('ALL ENV VARS:', import.meta.env);
+    console.log('Available env var keys:', allEnvVars);
+
     // Initialize Vapi
     const apiKey = import.meta.env.VITE_VAPI_API_KEY;
     const agentId = import.meta.env.VITE_VAPI_AGENT_ID;
 
-    // Diagnostic: Log all environment variables
-    console.log('ALL ENV VARS:', import.meta.env);
     console.log('Environment check:', {
       hasApiKey: !!apiKey,
       hasAgentId: !!agentId,
       apiKeyPrefix: apiKey?.substring(0, 10) + '...',
-      agentIdPrefix: agentId?.substring(0, 15) + '...'
+      agentIdPrefix: agentId?.substring(0, 15) + '...',
+      envVarCount: allEnvVars.length,
+      mode: import.meta.env.MODE,
+      dev: import.meta.env.DEV,
+      prod: import.meta.env.PROD
     });
 
     if (!apiKey) {
