@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Phone, MessageSquare, Shield, Sparkles } from 'lucide-react'
 import Button from './Button'
 
+// Hero section component
 export default function Hero() {
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
