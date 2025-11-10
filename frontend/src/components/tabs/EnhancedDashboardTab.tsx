@@ -137,9 +137,6 @@ export default function EnhancedDashboardTab({ onNavigate, demoMode = false }: E
     <div style={{ padding: spacing[6], backgroundColor: colors.background.page, display: 'flex', flexDirection: 'column', gap: spacing[6] }}>
       {/* Header */}
       <div>
-        <h1 className="text-neutral-900" style={{ fontSize: typography.fontSize['3xl'], fontWeight: typography.fontWeight.semibold, marginBottom: spacing[1] }}>
-          Dashboard
-        </h1>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <p className="text-neutral-500" style={{ fontSize: typography.fontSize.sm }}>
             Welcome back! Here's your real-time patient support overview

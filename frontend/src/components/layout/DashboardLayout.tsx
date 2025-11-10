@@ -53,7 +53,6 @@ export default function DashboardLayout({ children, activeTab, onTabChange, demo
     { id: 'conversations', label: 'Conversations', icon: Phone },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'marketing', label: 'Marketing Insights', icon: TrendingUp },
-    { id: 'outcomes', label: 'Outcomes', icon: Target },
     { id: 'configuration', label: 'Configuration', icon: Settings },
   ];
 
@@ -106,7 +105,7 @@ export default function DashboardLayout({ children, activeTab, onTabChange, demo
                 fontWeight: typography.fontWeight.semibold
               }}
             >
-              PharmAI Voice Hub
+              Vevara
             </h1>
           )}
           <button
@@ -177,15 +176,6 @@ export default function DashboardLayout({ children, activeTab, onTabChange, demo
                 <Menu style={{ width: '24px', height: '24px', color: colors.neutral[600] }} />
               </button>
             )}
-            <h2
-              className="text-neutral-900 capitalize"
-              style={{
-                fontSize: isMobile ? typography.fontSize.xl : typography.fontSize['3xl'],
-                fontWeight: typography.fontWeight.semibold
-              }}
-            >
-              {tabs.find(t => t.id === activeTab)?.label}
-            </h2>
           </div>
           <div className="flex items-center" style={{ gap: spacing[4] }}>
             {/* Customer Branding Slot */}
