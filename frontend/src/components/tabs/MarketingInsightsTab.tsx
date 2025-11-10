@@ -389,7 +389,7 @@ export default function MarketingInsightsTab() {
 
       // Stage 2: AI Analysis (30-100%)
       setProcessingStage('analyzing');
-      setProcessingMessage('Running AI analysis with OpenAI...');
+      setProcessingMessage('Running AI analysis on marketing content...');
       setProcessingProgress(40);
 
       // Initialize OpenAI
