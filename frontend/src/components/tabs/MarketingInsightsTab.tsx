@@ -1360,6 +1360,121 @@ Return ONLY a JSON object in this exact format:
             </div>
           </div>
           )}
+
+          {/* Executive Summary - Only show after analysis */}
+          {marketingFocus.length > 0 && barrierData.length > 0 && (
+            <div
+              className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border p-8"
+              style={{
+                borderColor: enterpriseColors.primary[200],
+                boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08)',
+              }}
+            >
+              <h2 className="text-xl font-semibold mb-6" style={{ color: enterpriseColors.neutral[900] }}>
+                Executive Summary
+              </h2>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Current Marketing Focus */}
+                <div className="bg-white rounded-lg p-6 border" style={{ borderColor: enterpriseColors.neutral[200] }}>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Target size={20} style={{ color: enterpriseColors.primary[600] }} />
+                    <h3 className="text-lg font-semibold" style={{ color: enterpriseColors.neutral[900] }}>
+                      Current Marketing Focus
+                    </h3>
+                  </div>
+                  <p className="text-sm mb-4" style={{ color: enterpriseColors.neutral[600] }}>
+                    What your website emphasizes:
+                  </p>
+                  <div className="space-y-3">
+                    {marketingFocus
+                      .sort((a, b) => b.percentage - a.percentage)
+                      .slice(0, 5)
+                      .map((item, index) => (
+                        <div key={index} className="flex items-center justify-between">
+                          <span className="text-sm font-medium" style={{ color: enterpriseColors.neutral[700] }}>
+                            {item.topic}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-24 h-2 rounded-full" style={{ backgroundColor: enterpriseColors.neutral[200] }}>
+                              <div
+                                className="h-2 rounded-full"
+                                style={{
+                                  width: `${item.percentage}%`,
+                                  backgroundColor: enterpriseColors.primary[500],
+                                }}
+                              />
+                            </div>
+                            <span className="text-sm font-semibold w-10 text-right" style={{ color: enterpriseColors.neutral[900] }}>
+                              {item.percentage}%
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+
+                {/* Recommended Focus */}
+                <div className="bg-white rounded-lg p-6 border" style={{ borderColor: enterpriseColors.success[200] }}>
+                  <div className="flex items-center gap-2 mb-4">
+                    <AlertTriangle size={20} style={{ color: enterpriseColors.success[600] }} />
+                    <h3 className="text-lg font-semibold" style={{ color: enterpriseColors.neutral[900] }}>
+                      Recommended Focus
+                    </h3>
+                  </div>
+                  <p className="text-sm mb-4" style={{ color: enterpriseColors.neutral[600] }}>
+                    Based on patient call data:
+                  </p>
+                  <div className="space-y-3">
+                    {barrierData
+                      .slice(0, 5)
+                      .map((item, index) => (
+                        <div key={index} className="flex items-center justify-between">
+                          <span className="text-sm font-medium" style={{ color: enterpriseColors.neutral[700] }}>
+                            {item.name}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-24 h-2 rounded-full" style={{ backgroundColor: enterpriseColors.neutral[200] }}>
+                              <div
+                                className="h-2 rounded-full"
+                                style={{
+                                  width: `${item.percentage}%`,
+                                  backgroundColor: item.priority === 'HIGH'
+                                    ? enterpriseColors.danger[500]
+                                    : item.priority === 'MEDIUM'
+                                    ? enterpriseColors.warning[500]
+                                    : enterpriseColors.neutral[400],
+                                }}
+                              />
+                            </div>
+                            <span className="text-sm font-semibold w-10 text-right" style={{ color: enterpriseColors.neutral[900] }}>
+                              {item.percentage}%
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Key Takeaway */}
+              <div className="mt-6 p-4 bg-white rounded-lg border" style={{ borderColor: enterpriseColors.primary[200] }}>
+                <p className="text-sm font-semibold mb-2" style={{ color: enterpriseColors.primary[700] }}>
+                  Key Takeaway:
+                </p>
+                <p className="text-sm" style={{ color: enterpriseColors.neutral[700] }}>
+                  {(() => {
+                    const topBarrier = barrierData[0];
+                    const topMarketing = marketingFocus.sort((a, b) => b.percentage - a.percentage)[0];
+                    const barrierName = topBarrier?.name || 'patient concerns';
+                    const marketingName = topMarketing?.topic || 'marketing content';
+
+                    return `Your marketing primarily focuses on ${marketingName.toLowerCase()} (${topMarketing?.percentage || 0}%), but ${topBarrier?.percentage || 0}% of patients struggle with ${barrierName.toLowerCase()}. Consider realigning your content strategy to address the most pressing patient needs.`;
+                  })()}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
