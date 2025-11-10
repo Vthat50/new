@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Phone, PhoneOff, Volume2, Loader2 } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 export default function VoiceAgent() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isCallActive, setIsCallActive] = useState(false);
@@ -19,43 +21,31 @@ export default function VoiceAgent() {
     setError('');
 
     try {
-      const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY;
-      const agentId = import.meta.env.VITE_ELEVENLABS_AGENT_ID;
+      console.log('Initiating call to:', phoneNumber);
 
-      if (!apiKey || !agentId) {
-        throw new Error('Eleven Labs credentials not configured');
-      }
-
-      // Format phone number (remove any non-digit characters)
-      const formattedPhone = phoneNumber.replace(/\D/g, '');
-
-      // Add + prefix if not present
-      const finalPhone = formattedPhone.startsWith('+') ? formattedPhone : `+${formattedPhone}`;
-
-      console.log('Initiating call to:', finalPhone);
-
-      // Call Eleven Labs API to start conversation
-      const response = await fetch('https://api.elevenlabs.io/v1/convai/conversation', {
+      const response = await fetch(`${API_URL}/api/calls/initiate-outbound-call`, {
         method: 'POST',
         headers: {
-          'xi-api-key': apiKey,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          agent_id: agentId,
-          call_data: {
-            to_phone_number: finalPhone,
+          phone_number: phoneNumber,
+          patient_name: 'Demo User',
+          metadata: {
+            source: 'landing_page',
           },
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail?.message || `API Error: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ detail: 'Failed to initiate call' }));
+        throw new Error(errorData.detail || `API Error: ${response.status}`);
       }
 
       const data = await response.json();
-      setConversationId(data.conversation_id);
+      console.log('Call initiated successfully:', data);
+
+      setConversationId(data.conversation_id || '');
       setIsCallActive(true);
       setIsLoading(false);
 
@@ -67,8 +57,7 @@ export default function VoiceAgent() {
   };
 
   const endCall = async () => {
-    // Note: Eleven Labs doesn't provide an API to end ongoing calls from client
-    // The call will end when either party hangs up
+    // Note: The call will end when either party hangs up
     setIsCallActive(false);
     setPhoneNumber('');
     setConversationId('');
