@@ -504,33 +504,19 @@ Return ONLY valid JSON (no other text):
       let insightId = 1;
 
       calculatedGaps.forEach(gap => {
-        if (Math.abs(gap.gap) > 5) { // Only show significant gaps
-          const isUnderserved = gap.gap < 0;
+        // Only show insights for underserved areas (patient needs not met by marketing)
+        if (gap.gap < -5) { // Negative gap = underserved
           const absGap = Math.abs(gap.gap);
 
-          if (isUnderserved) {
-            // Patient barrier > Marketing focus
-            generatedInsights.push({
-              id: String(insightId++),
-              category: gap.category,
-              finding: `${gap.patient_barrier}% of patients have ${gap.category.toLowerCase()} concerns, but only ${gap.marketing}% of marketing addresses this`,
-              impact: `$${(absGap * 87000).toLocaleString()} revenue at risk`,
-              confidence: Math.min(95, 75 + absGap),
-              priority: absGap > 20 ? 'HIGH' : absGap > 10 ? 'MEDIUM' : 'LOW',
-              action: `Increase ${gap.category.toLowerCase()} messaging by ${Math.round(absGap)} percentage points`
-            });
-          } else {
-            // Marketing focus > Patient barrier (over-emphasis)
-            generatedInsights.push({
-              id: String(insightId++),
-              category: gap.category,
-              finding: `${gap.marketing}% of marketing focuses on ${gap.category.toLowerCase()}, but only ${gap.patient_barrier}% of patients question this`,
-              impact: `$${(absGap * 25000).toLocaleString()} budget reallocation opportunity`,
-              confidence: Math.min(95, 70 + absGap / 2),
-              priority: absGap > 20 ? 'MEDIUM' : 'LOW',
-              action: `Reduce ${gap.category.toLowerCase()} messaging by ${Math.round(absGap)} percentage points`
-            });
-          }
+          generatedInsights.push({
+            id: String(insightId++),
+            category: gap.category,
+            finding: `${gap.patient_barrier}% of patients have ${gap.category.toLowerCase()} concerns, but only ${gap.marketing}% of marketing addresses this`,
+            impact: `$${(absGap * 87000).toLocaleString()} revenue at risk`,
+            confidence: Math.min(95, 75 + absGap),
+            priority: absGap > 20 ? 'HIGH' : absGap > 10 ? 'MEDIUM' : 'LOW',
+            action: `Add content addressing ${gap.category.toLowerCase()} to help more patients`
+          });
         }
       });
 
