@@ -1,28 +1,20 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, Phone, PhoneOff, Volume2, Loader2 } from 'lucide-react';
-import { Conversation } from '@elevenlabs/client';
+import { Phone, PhoneOff, Volume2, Loader2 } from 'lucide-react';
 
 export default function VoiceAgent() {
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [isCallActive, setIsCallActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [error, setError] = useState('');
-  const conversationRef = useRef<Conversation | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (conversationRef.current) {
-        conversationRef.current.endSession();
-      }
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
-    };
-  }, []);
+  const [conversationId, setConversationId] = useState('');
 
   const startCall = async () => {
+    if (!phoneNumber.trim()) {
+      setError('Please enter a phone number');
+      return;
+    }
+
     setIsLoading(true);
     setError('');
 
@@ -30,68 +22,56 @@ export default function VoiceAgent() {
       const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY;
       const agentId = import.meta.env.VITE_ELEVENLABS_AGENT_ID;
 
-      console.log('Environment check:', {
-        hasApiKey: !!apiKey,
-        hasAgentId: !!agentId,
-        apiKeyPrefix: apiKey?.substring(0, 10) + '...',
-        agentIdPrefix: agentId?.substring(0, 15) + '...'
-      });
-
-      if (!apiKey) {
-        throw new Error('Eleven Labs API key not configured');
+      if (!apiKey || !agentId) {
+        throw new Error('Eleven Labs credentials not configured');
       }
 
-      if (!agentId) {
-        throw new Error('Eleven Labs Agent ID not configured');
-      }
+      // Format phone number (remove any non-digit characters)
+      const formattedPhone = phoneNumber.replace(/\D/g, '');
 
-      // Initialize audio context
-      audioContextRef.current = new AudioContext({ sampleRate: 16000 });
+      // Add + prefix if not present
+      const finalPhone = formattedPhone.startsWith('+') ? formattedPhone : `+${formattedPhone}`;
 
-      // Create conversation
-      const conversation = await Conversation.startSession({
-        agentId: agentId,
-        onConnect: () => {
-          console.log('Connected to Eleven Labs');
-          setIsCallActive(true);
-          setIsLoading(false);
+      console.log('Initiating call to:', finalPhone);
+
+      // Call Eleven Labs API to start conversation
+      const response = await fetch('https://api.elevenlabs.io/v1/convai/conversation', {
+        method: 'POST',
+        headers: {
+          'xi-api-key': apiKey,
+          'Content-Type': 'application/json',
         },
-        onDisconnect: () => {
-          console.log('Disconnected from Eleven Labs');
-          setIsCallActive(false);
-          setIsSpeaking(false);
-        },
-        onError: (error) => {
-          console.error('Eleven Labs error:', error);
-          setError(error.message || 'Connection error');
-          setIsLoading(false);
-          setIsCallActive(false);
-        },
-        onModeChange: (mode) => {
-          console.log('Mode changed:', mode);
-          setIsSpeaking(mode.mode === 'speaking');
-        },
+        body: JSON.stringify({
+          agent_id: agentId,
+          call_data: {
+            to_phone_number: finalPhone,
+          },
+        }),
       });
 
-      conversationRef.current = conversation;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail?.message || `API Error: ${response.status}`);
+      }
 
-      // Set up audio playback
-      await conversation.startAudio(audioContextRef.current);
+      const data = await response.json();
+      setConversationId(data.conversation_id);
+      setIsCallActive(true);
+      setIsLoading(false);
 
     } catch (err: any) {
       console.error('Failed to start call:', err);
-      setError(err.message || 'Failed to start call');
+      setError(err.message || 'Failed to initiate call');
       setIsLoading(false);
     }
   };
 
   const endCall = async () => {
-    if (conversationRef.current) {
-      await conversationRef.current.endSession();
-      conversationRef.current = null;
-    }
+    // Note: Eleven Labs doesn't provide an API to end ongoing calls from client
+    // The call will end when either party hangs up
     setIsCallActive(false);
-    setIsSpeaking(false);
+    setPhoneNumber('');
+    setConversationId('');
   };
 
   return (
@@ -110,44 +90,64 @@ export default function VoiceAgent() {
             <span className="text-sm font-semibold text-blue-700">AI Voice Assistant</span>
           </div>
           <h3 className="text-2xl font-bold text-gray-900 mb-2">
-            Try Our AI Voice Assistant
+            Get a Call from Our AI Assistant
           </h3>
           <p className="text-gray-600 text-sm">
-            Experience our AI-powered patient support with natural voice by Eleven Labs
+            Enter your phone number and we'll call you instantly with our AI-powered support
           </p>
         </div>
 
-        {/* Voice Visualizer */}
+        {!isCallActive && (
+          <div className="mb-6">
+            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+              Your Phone Number
+            </label>
+            <input
+              type="tel"
+              id="phone"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              placeholder="+1 (555) 123-4567"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+              disabled={isLoading}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Include country code (e.g., +1 for US)
+            </p>
+          </div>
+        )}
+
+        {/* Call Status Visualizer */}
         <div className="relative flex items-center justify-center mb-8">
-          {/* Animated rings */}
+          {/* Animated rings when call is active */}
           <AnimatePresence>
             {isCallActive && (
               <>
                 <motion.div
-                  className="absolute w-32 h-32 rounded-full border-2 border-blue-400"
+                  className="absolute w-32 h-32 rounded-full border-2 border-green-400"
                   initial={{ scale: 1, opacity: 0.5 }}
                   animate={{
-                    scale: isSpeaking ? [1, 1.3, 1] : 1,
-                    opacity: isSpeaking ? [0.5, 0.2, 0.5] : 0.3,
+                    scale: [1, 1.3, 1],
+                    opacity: [0.5, 0.2, 0.5],
                   }}
                   exit={{ scale: 0, opacity: 0 }}
                   transition={{
-                    duration: isSpeaking ? 1.5 : 0.3,
-                    repeat: isSpeaking ? Infinity : 0,
+                    duration: 2,
+                    repeat: Infinity,
                   }}
                 />
                 <motion.div
-                  className="absolute w-40 h-40 rounded-full border-2 border-purple-400"
+                  className="absolute w-40 h-40 rounded-full border-2 border-blue-400"
                   initial={{ scale: 1, opacity: 0.3 }}
                   animate={{
-                    scale: isSpeaking ? [1, 1.4, 1] : 1,
-                    opacity: isSpeaking ? [0.3, 0.1, 0.3] : 0.2,
+                    scale: [1, 1.4, 1],
+                    opacity: [0.3, 0.1, 0.3],
                   }}
                   exit={{ scale: 0, opacity: 0 }}
                   transition={{
-                    duration: isSpeaking ? 2 : 0.3,
-                    repeat: isSpeaking ? Infinity : 0,
-                    delay: 0.2,
+                    duration: 2.5,
+                    repeat: Infinity,
+                    delay: 0.3,
                   }}
                 />
               </>
@@ -187,7 +187,7 @@ export default function VoiceAgent() {
                 exit={{ opacity: 0 }}
                 className="text-sm text-blue-600 font-medium"
               >
-                Connecting to agent...
+                Initiating call...
               </motion.p>
             )}
             {isCallActive && !isLoading && (
@@ -200,9 +200,12 @@ export default function VoiceAgent() {
                 <div className="flex items-center justify-center gap-2 mb-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                   <p className="text-sm text-green-600 font-medium">
-                    {isSpeaking ? 'AI is speaking...' : 'Listening...'}
+                    Call in progress...
                   </p>
                 </div>
+                <p className="text-xs text-gray-600">
+                  You should receive a call at {phoneNumber}
+                </p>
               </motion.div>
             )}
             {!isCallActive && !isLoading && (
@@ -213,7 +216,7 @@ export default function VoiceAgent() {
                 exit={{ opacity: 0 }}
                 className="text-sm text-gray-600"
               >
-                Click to start conversation
+                Enter your number to get started
               </motion.p>
             )}
           </AnimatePresence>
@@ -233,11 +236,11 @@ export default function VoiceAgent() {
         <div className="grid grid-cols-2 gap-3 pt-6 border-t border-gray-200">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-              <Mic className="w-4 h-4 text-blue-600" />
+              <Phone className="w-4 h-4 text-blue-600" />
             </div>
             <div>
-              <p className="text-xs font-semibold text-gray-900">Natural Voice</p>
-              <p className="text-xs text-gray-500">Eleven Labs AI</p>
+              <p className="text-xs font-semibold text-gray-900">Real Phone Call</p>
+              <p className="text-xs text-gray-500">Direct to your phone</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -245,31 +248,31 @@ export default function VoiceAgent() {
               <Volume2 className="w-4 h-4 text-purple-600" />
             </div>
             <div>
-              <p className="text-xs font-semibold text-gray-900">Real-time</p>
-              <p className="text-xs text-gray-500">Instant response</p>
+              <p className="text-xs font-semibold text-gray-900">Instant Connect</p>
+              <p className="text-xs text-gray-500">Within seconds</p>
             </div>
           </div>
         </div>
 
-        {/* Sample questions */}
+        {/* Sample topics */}
         {!isCallActive && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="mt-6 pt-6 border-t border-gray-200"
           >
-            <p className="text-xs font-semibold text-gray-700 mb-3">Try asking:</p>
+            <p className="text-xs font-semibold text-gray-700 mb-3">Topics to discuss:</p>
             <div className="space-y-2">
               {[
-                'How does the patient support program work?',
-                'What are the side effects I should watch for?',
-                'How do I schedule my next appointment?',
-              ].map((question, index) => (
+                'Patient support program details',
+                'Side effects and what to watch for',
+                'Scheduling appointments and follow-ups',
+              ].map((topic, index) => (
                 <div
                   key={index}
                   className="text-xs text-gray-600 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200"
                 >
-                  "{question}"
+                  • {topic}
                 </div>
               ))}
             </div>
