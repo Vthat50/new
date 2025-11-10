@@ -582,6 +582,13 @@ Return ONLY a JSON object in this exact format:
         { state: 'PA', patient_count: 42, risk_score: 52, abandonment_rate: 28, top_barrier: 'Cost', barrier_count: 25 },
       ]);
 
+      console.log('Analysis complete - Data set:', {
+        barrierDataLength: patientBarriersData.length,
+        marketingFocusLength: marketingTopics.length,
+        gapDataLength: calculatedGaps.length,
+        insightsLength: generatedInsights.length
+      });
+
       setProcessingProgress(100);
       setProcessingStage('complete');
       setProcessingMessage('Analysis complete');
@@ -1362,7 +1369,14 @@ Return ONLY a JSON object in this exact format:
           )}
 
           {/* Executive Summary - Only show after analysis */}
-          {marketingFocus.length > 0 && barrierData.length > 0 && (
+          {marketingFocus.length > 0 && barrierData.length > 0 && (() => {
+            console.log('Rendering Executive Summary:', {
+              marketingFocusLength: marketingFocus.length,
+              barrierDataLength: barrierData.length,
+              gapDataLength: gapData.length
+            });
+            return true;
+          })() && (
             <div
               className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border p-8"
               style={{
