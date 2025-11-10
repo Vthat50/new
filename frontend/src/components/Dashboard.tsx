@@ -7,6 +7,7 @@ import AnalyticsTab from './tabs/AnalyticsTab';
 import ConfigurationTab from './tabs/ConfigurationTab';
 import MarketingInsightsTab from './tabs/MarketingInsightsTab';
 import OutcomesTab from './tabs/OutcomesTab';
+import WorkflowBuilderTab from './tabs/WorkflowBuilderTab';
 import InstallPrompt from './shared/InstallPrompt';
 import OfflineIndicator from './shared/OfflineIndicator';
 import DemoControlPanel from './demo/DemoControlPanel';
@@ -32,6 +33,8 @@ export default function Dashboard() {
         return <AnalyticsTab />;
       case 'marketing':
         return <MarketingInsightsTab />;
+      case 'workflow-builder':
+        return <WorkflowBuilderTab />;
       case 'outcomes':
         return <OutcomesTab />;
       case 'configuration':
