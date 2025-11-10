@@ -7,6 +7,7 @@ export default function VoiceAgent() {
   const [age, setAge] = useState('');
   const [gender, setGender] = useState('');
   const [location, setLocation] = useState('');
+  const [showForm, setShowForm] = useState(false);
   const [isCallActive, setIsCallActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -104,6 +105,7 @@ export default function VoiceAgent() {
   };
 
   const handleCancel = () => {
+    setShowForm(false);
     setPhoneNumber('');
     setAge('');
     setGender('');
@@ -120,7 +122,82 @@ export default function VoiceAgent() {
         transition={{ duration: 0.6, delay: 0.3 }}
         className="bg-white rounded-2xl p-8 shadow-lg"
       >
-        {!isCallActive ? (
+        {isCallActive ? (
+          /* Call Active State */
+          <div className="text-center py-12">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+              <p className="text-lg text-green-600 font-semibold">
+                Call in progress...
+              </p>
+            </div>
+            <p className="text-gray-600 mb-8">
+              You should receive a call at {phoneNumber}
+            </p>
+            <button
+              onClick={() => {
+                setIsCallActive(false);
+                handleCancel();
+              }}
+              className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors"
+            >
+              End Session
+            </button>
+          </div>
+        ) : !showForm ? (
+          /* Initial State - Show Challenge and Start Call Button */
+          <>
+            {/* Challenge Section */}
+            <div className="bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl p-8 mb-8">
+              <h3 className="text-2xl font-bold text-white text-center mb-4">
+                "Try to Break Our AI" Challenge
+              </h3>
+              <p className="text-white/90 text-center mb-8">
+                See if you can stump our AI. Try these challenges during your call:
+              </p>
+
+              <div className="grid md:grid-cols-2 gap-4 mb-8">
+                {challenges.slice(0, 4).map((challenge) => (
+                  <div
+                    key={challenge.number}
+                    className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6"
+                  >
+                    <h4 className="text-lg font-semibold text-white mb-2">
+                      {challenge.title}
+                    </h4>
+                    <p className="text-white/90">
+                      {challenge.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Challenge 5 centered */}
+              <div className="max-w-md mx-auto">
+                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6">
+                  <h4 className="text-lg font-semibold text-white mb-2">
+                    Challenge 5
+                  </h4>
+                  <p className="text-white/90">
+                    Act confused about the trial purpose
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Start Call Button */}
+            <div className="flex justify-center">
+              <button
+                onClick={() => setShowForm(true)}
+                className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+              >
+                <Phone className="w-5 h-5" />
+                Start Call
+              </button>
+            </div>
+          </>
+        ) : (
+          /* Form State - Show Form Fields */
           <>
             {/* Form Fields */}
             <div className="space-y-6 mb-8">
@@ -193,44 +270,6 @@ export default function VoiceAgent() {
               </div>
             </div>
 
-            {/* Challenge Section */}
-            <div className="bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl p-8 mb-8">
-              <h3 className="text-2xl font-bold text-white text-center mb-4">
-                "Try to Break Our AI" Challenge
-              </h3>
-              <p className="text-white/90 text-center mb-8">
-                See if you can stump our AI. Try these challenges during your call:
-              </p>
-
-              <div className="grid md:grid-cols-2 gap-4 mb-8">
-                {challenges.slice(0, 4).map((challenge) => (
-                  <div
-                    key={challenge.number}
-                    className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6"
-                  >
-                    <h4 className="text-lg font-semibold text-white mb-2">
-                      {challenge.title}
-                    </h4>
-                    <p className="text-white/90">
-                      {challenge.description}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Challenge 5 centered */}
-              <div className="max-w-md mx-auto">
-                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6">
-                  <h4 className="text-lg font-semibold text-white mb-2">
-                    Challenge 5
-                  </h4>
-                  <p className="text-white/90">
-                    Act confused about the trial purpose
-                  </p>
-                </div>
-              </div>
-            </div>
-
             {/* Error Message */}
             {error && (
               <motion.p
@@ -264,34 +303,12 @@ export default function VoiceAgent() {
                 ) : (
                   <>
                     <Phone className="w-5 h-5" />
-                    Start Call
+                    Make Call
                   </>
                 )}
               </button>
             </div>
           </>
-        ) : (
-          /* Call Active State */
-          <div className="text-center py-12">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-              <p className="text-lg text-green-600 font-semibold">
-                Call in progress...
-              </p>
-            </div>
-            <p className="text-gray-600 mb-8">
-              You should receive a call at {phoneNumber}
-            </p>
-            <button
-              onClick={() => {
-                setIsCallActive(false);
-                handleCancel();
-              }}
-              className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors"
-            >
-              End Session
-            </button>
-          </div>
         )}
       </motion.div>
     </div>
