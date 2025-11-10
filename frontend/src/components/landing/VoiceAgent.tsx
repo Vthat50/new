@@ -14,19 +14,35 @@ export default function VoiceAgent() {
   useEffect(() => {
     // Initialize Vapi
     const apiKey = import.meta.env.VITE_VAPI_API_KEY;
+    const agentId = import.meta.env.VITE_VAPI_AGENT_ID;
+
     console.log('Environment check:', {
       hasApiKey: !!apiKey,
-      hasAgentId: !!import.meta.env.VITE_VAPI_AGENT_ID,
+      hasAgentId: !!agentId,
       apiKeyPrefix: apiKey?.substring(0, 10) + '...',
-      agentIdPrefix: import.meta.env.VITE_VAPI_AGENT_ID?.substring(0, 15) + '...'
+      agentIdPrefix: agentId?.substring(0, 15) + '...'
     });
 
     if (!apiKey) {
       setError('API key not configured');
+      console.error('VITE_VAPI_API_KEY environment variable is missing');
       return;
     }
 
-    vapiRef.current = new Vapi(apiKey);
+    if (!agentId) {
+      setError('Agent ID not configured');
+      console.error('VITE_VAPI_AGENT_ID environment variable is missing');
+      return;
+    }
+
+    try {
+      vapiRef.current = new Vapi(apiKey);
+      console.log('Vapi initialized successfully');
+    } catch (err) {
+      console.error('Failed to initialize Vapi:', err);
+      setError('Failed to initialize voice agent');
+      return;
+    }
 
     // Set up event listeners
     const vapi = vapiRef.current;
