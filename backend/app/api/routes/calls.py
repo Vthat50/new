@@ -1,16 +1,25 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from uuid import UUID
+from pydantic import BaseModel
 import random
 from datetime import datetime
+import httpx
 from app.api.dependencies import get_db
 from app.models.call import Call
 from app.models.patient import Patient
 from app.models.geographic import GeographicProfile
 from app.schemas.call import Call as CallSchema, CallCreate, CallAnalysis
+from app.core.config import settings
 
 router = APIRouter(prefix="/api/calls", tags=["calls"])
+
+
+class InitiateCallRequest(BaseModel):
+    phone_number: str
+    patient_name: Optional[str] = None
+    metadata: Optional[dict] = None
 
 
 @router.get("/", response_model=List[CallSchema])
@@ -144,3 +153,82 @@ def create_call(call: CallCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_call)
     return db_call
+
+
+@router.post("/initiate-outbound-call")
+async def initiate_outbound_call(request: InitiateCallRequest):
+    """
+    Initiate an outbound call using Eleven Labs
+    """
+    # Validate phone number
+    if not request.phone_number:
+        raise HTTPException(status_code=400, detail="Phone number is required")
+
+    # Get Eleven Labs configuration
+    api_key = settings.ELEVENLABS_API_KEY
+    agent_id = settings.ELEVENLABS_AGENT_ID
+    phone_number_id = settings.ELEVENLABS_PHONE_NUMBER_ID
+
+    # Validate configuration
+    if not api_key or not agent_id or not phone_number_id:
+        raise HTTPException(
+            status_code=500,
+            detail="Eleven Labs configuration is incomplete"
+        )
+
+    # Format phone number (ensure it starts with +)
+    formatted_number = request.phone_number.strip()
+    if not formatted_number.startswith('+'):
+        # Assume US number if no country code
+        formatted_number = '+1' + formatted_number.replace('-', '').replace('(', '').replace(')', '').replace(' ', '')
+
+    # Prepare metadata
+    metadata = request.metadata or {}
+    if request.patient_name:
+        metadata['patient_name'] = request.patient_name
+
+    # Call Eleven Labs API
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(
+                'https://api.elevenlabs.io/v1/convai/twilio/outbound-call',
+                headers={
+                    'xi-api-key': api_key,
+                    'Content-Type': 'application/json',
+                },
+                json={
+                    'agent_id': agent_id,
+                    'agent_phone_number_id': phone_number_id,
+                    'to_number': formatted_number,
+                    'metadata': metadata,
+                },
+                timeout=30.0
+            )
+
+            if response.status_code != 200:
+                error_text = response.text
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=f"Failed to initiate call: {error_text}"
+                )
+
+            data = response.json()
+
+            return {
+                "success": True,
+                "conversation_id": data.get("conversation_id"),
+                "call_sid": data.get("call_sid"),
+                "message": f"Call initiated to {formatted_number}",
+                "data": data
+            }
+
+        except httpx.TimeoutException:
+            raise HTTPException(
+                status_code=504,
+                detail="Request to Eleven Labs timed out"
+            )
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error connecting to Eleven Labs: {str(e)}"
+            )

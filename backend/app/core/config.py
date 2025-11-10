@@ -13,6 +13,11 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = "sk-mock-key"
     DEEPGRAM_API_KEY: str = "mock-deepgram-key"
 
+    # Eleven Labs
+    ELEVENLABS_API_KEY: str = "sk-aa82c352bbcd6eecb2775358c18d07b0b1923e851568ef09"
+    ELEVENLABS_AGENT_ID: str = "agent_6501k9nxtr86emsv7jm770kkdcyr"
+    ELEVENLABS_PHONE_NUMBER_ID: str = "phnum_01jww78wjjffev4pdypxqt7bqv"
+
     # Application
     SECRET_KEY: str = "your-secret-key-change-in-production"
     ENVIRONMENT: str = "development"
