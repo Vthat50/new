@@ -140,10 +140,10 @@ export default function VoiceAgent() {
             <span className="text-sm font-semibold text-blue-700">AI Voice Assistant</span>
           </div>
           <h3 className="text-2xl font-bold text-gray-900 mb-2">
-            Try Our Voice Agent
+            Try Our AI Voice Assistant
           </h3>
           <p className="text-gray-600 text-sm">
-            Experience our AI-powered patient support assistant with natural voice powered by Eleven Labs
+            Experience our AI-powered patient support with natural voice by Eleven Labs
           </p>
         </div>
 
