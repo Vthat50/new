@@ -149,87 +149,6 @@ export default function MarketingInsightsTab() {
     }, 400);
   };
 
-  const loadAnalysisData = () => {
-    // Patient barriers (from actual call data)
-    setBarrierData([
-      { name: 'Cost & Insurance Issues', percentage: 34, priority: 'HIGH', count: 98 },
-      { name: 'Injection Anxiety', percentage: 19, priority: 'HIGH', count: 55 },
-      { name: 'Side Effect Concerns', percentage: 15, priority: 'MEDIUM', count: 43 },
-      { name: 'Access & Logistics', percentage: 12, priority: 'MEDIUM', count: 34 },
-      { name: 'Efficacy Questions', percentage: 8, priority: 'LOW', count: 23 },
-      { name: 'Administration Complexity', percentage: 7, priority: 'LOW', count: 20 },
-      { name: 'Other', percentage: 5, priority: 'LOW', count: 14 },
-    ]);
-
-    // Marketing focus (from content analysis)
-    setMarketingFocus([
-      { topic: 'Efficacy & Clinical Results', percentage: 45, alignment: 18 },
-      { topic: 'Dosing Convenience', percentage: 30, alignment: 55 },
-      { topic: 'Quality of Life', percentage: 25, alignment: 48 },
-      { topic: 'Cost Support Programs', percentage: 0, alignment: 0 },
-      { topic: 'Injection Training', percentage: 0, alignment: 0 },
-    ]);
-
-    // Gap analysis data (diverging bar chart)
-    setGapData([
-      { category: 'Cost Support', marketing: 0, patient_barrier: 34, gap: -34 },
-      { category: 'Injection Training', marketing: 0, patient_barrier: 19, gap: -19 },
-      { category: 'Side Effects', marketing: 0, patient_barrier: 15, gap: -15 },
-      { category: 'Efficacy', marketing: 45, patient_barrier: 8, gap: 37 },
-      { category: 'Dosing', marketing: 30, patient_barrier: 7, gap: 23 },
-      { category: 'Quality of Life', marketing: 25, patient_barrier: 0, gap: 25 },
-    ]);
-
-    // AI-generated insights (tabular format)
-    setInsights([
-      {
-        id: '1',
-        category: 'Cost Support',
-        finding: '34% of patient barriers are cost-related while 0% of marketing addresses this',
-        impact: '$2.95M revenue at risk',
-        confidence: 94,
-        priority: 'HIGH',
-        action: 'Increase cost support messaging by 30-35%'
-      },
-      {
-        id: '2',
-        category: 'Injection Training',
-        finding: '19% experience injection anxiety with no current support content',
-        impact: '$1.65M revenue at risk',
-        confidence: 89,
-        priority: 'HIGH',
-        action: 'Launch injection training video series'
-      },
-      {
-        id: '3',
-        category: 'Efficacy',
-        finding: '45% of marketing focuses on efficacy but only 8% of patients question this',
-        impact: '$890K budget reallocation opportunity',
-        confidence: 91,
-        priority: 'MEDIUM',
-        action: 'Reduce efficacy messaging by 30 percentage points'
-      },
-      {
-        id: '4',
-        category: 'Side Effects',
-        finding: '15% of patients concerned about side effects with no dedicated content',
-        impact: '$1.30M revenue at risk',
-        confidence: 86,
-        priority: 'MEDIUM',
-        action: 'Create side effect management resource hub'
-        },
-    ]);
-
-    // Geographic hotspots
-    setGeographicData([
-      { state: 'CA', patient_count: 89, risk_score: 68, abandonment_rate: 42, top_barrier: 'Cost', barrier_count: 45 },
-      { state: 'TX', patient_count: 67, risk_score: 62, abandonment_rate: 38, top_barrier: 'Cost', barrier_count: 38 },
-      { state: 'FL', patient_count: 54, risk_score: 59, abandonment_rate: 35, top_barrier: 'Access', barrier_count: 32 },
-      { state: 'NY', patient_count: 48, risk_score: 55, abandonment_rate: 31, top_barrier: 'Insurance', barrier_count: 28 },
-      { state: 'PA', patient_count: 42, risk_score: 52, abandonment_rate: 28, top_barrier: 'Cost', barrier_count: 25 },
-    ]);
-  };
-
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
@@ -272,28 +191,12 @@ export default function MarketingInsightsTab() {
     setProcessingStage('complete');
     setProcessingMessage('Analysis complete');
 
-    // Set analysis results
+    // Note: File upload feature is not fully implemented yet
+    // For now, just complete the processing
     setTimeout(() => {
-      setMaterialAnalysis({
-        total_files: uploadedFiles.length + files.length,
-        total_words: Math.floor(Math.random() * 5000) + 3000,
-        analyzed_at: new Date().toISOString(),
-      });
-
-      // Load all analysis data after processing is complete
-      loadAnalysisData();
-
-      // Update marketing focus with analyzed data (overwrites the default from loadAnalysisData)
-      setMarketingFocus([
-        { topic: 'Efficacy & Clinical Results', percentage: 48, alignment: 17 },
-        { topic: 'Dosing Convenience', percentage: 28, alignment: 58 },
-        { topic: 'Quality of Life', percentage: 22, alignment: 51 },
-        { topic: 'Cost Support Programs', percentage: 2, alignment: 6 },
-        { topic: 'Injection Training', percentage: 0, alignment: 0 },
-      ]);
-
       setProcessingStage('idle');
       setProcessingProgress(0);
+      alert('File upload analysis is not yet implemented. Please use website links instead.');
     }, 1000);
   };
 
@@ -633,7 +536,8 @@ Return ONLY valid JSON (no other text):
 
       setInsights(generatedInsights);
 
-      // Load geographic data (static for now)
+      // Geographic data will be loaded separately (patient call-based, not website-based)
+      // For now, load static geographic data from call analysis
       setGeographicData([
         { state: 'CA', patient_count: 89, risk_score: 72, abandonment_rate: 45, top_barrier: 'Cost', barrier_count: 52 },
         { state: 'TX', patient_count: 67, risk_score: 62, abandonment_rate: 38, top_barrier: 'Cost', barrier_count: 38 },
@@ -1197,30 +1101,67 @@ Return ONLY valid JSON (no other text):
                   </div>
                 ))}
 
-                {/* Only show underrepresented topics if there are any with 0% or very low % */}
-                {marketingFocus.filter(item => item.percentage <= 2).length > 0 && (
-                  <div className="pt-4 border-t" style={{ borderColor: enterpriseColors.neutral[200] }}>
-                    <p className="text-xs font-semibold mb-2" style={{ color: enterpriseColors.neutral[900] }}>
-                      UNDERREPRESENTED TOPICS (&lt;3%)
-                    </p>
-                    {marketingFocus.filter(item => item.percentage <= 2).map((item) => (
-                      <div key={item.topic} className="flex items-center justify-between py-2">
-                        <span className="text-sm" style={{ color: enterpriseColors.neutral[600] }}>
-                          {item.topic}
-                        </span>
-                        <span
-                          className="text-xs font-semibold px-2 py-1 rounded"
-                          style={{
-                            backgroundColor: enterpriseColors.danger[100],
-                            color: enterpriseColors.danger[700],
-                          }}
-                        >
-                          {item.percentage}%
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                {/* Show underrepresented topics based on patient barriers from calls */}
+                {(() => {
+                  // Map patient barriers to marketing categories
+                  const patientBarriersFromCalls = [
+                    { name: 'Cost & Insurance Support', patientBarrier: 34, category: 'Cost & Insurance Issues' },
+                    { name: 'Injection Support & Training', patientBarrier: 19, category: 'Injection Anxiety' },
+                    { name: 'Side Effects Management', patientBarrier: 15, category: 'Side Effect Concerns' },
+                    { name: 'Access & Logistics', patientBarrier: 12, category: 'Access & Logistics' },
+                    { name: 'Efficacy & Clinical Results', patientBarrier: 8, category: 'Efficacy Questions' },
+                    { name: 'Dosing & Convenience', patientBarrier: 7, category: 'Administration Complexity' }
+                  ];
+
+                  // Find critical gaps: high patient barrier but low marketing coverage
+                  const criticalGaps = patientBarriersFromCalls
+                    .map(barrier => {
+                      const marketingTopic = marketingFocus.find(m => m.topic === barrier.name);
+                      const marketingPct = marketingTopic?.percentage || 0;
+                      const gap = marketingPct - barrier.patientBarrier;
+                      return {
+                        ...barrier,
+                        marketingPct,
+                        gap,
+                        isCritical: gap < -10 // Marketing is more than 10% below patient barrier
+                      };
+                    })
+                    .filter(item => item.isCritical)
+                    .sort((a, b) => a.gap - b.gap); // Most negative first
+
+                  return criticalGaps.length > 0 ? (
+                    <div className="pt-4 border-t" style={{ borderColor: enterpriseColors.neutral[200] }}>
+                      <p className="text-xs font-semibold mb-2" style={{ color: enterpriseColors.danger[700] }}>
+                        ⚠️ CRITICAL GAPS - UNDERSERVED PATIENT NEEDS
+                      </p>
+                      <p className="text-xs mb-3" style={{ color: enterpriseColors.neutral[600] }}>
+                        Topics with high patient call volume but low marketing coverage
+                      </p>
+                      {criticalGaps.map((item) => (
+                        <div key={item.name} className="mb-3 p-2 rounded" style={{ backgroundColor: enterpriseColors.danger[50] }}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm font-medium" style={{ color: enterpriseColors.neutral[900] }}>
+                              {item.name}
+                            </span>
+                            <span
+                              className="text-xs font-bold px-2 py-1 rounded"
+                              style={{
+                                backgroundColor: enterpriseColors.danger[100],
+                                color: enterpriseColors.danger[700],
+                              }}
+                            >
+                              Gap: {Math.abs(item.gap)}%
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs" style={{ color: enterpriseColors.neutral[600] }}>
+                            <span>Patient Calls: {item.patientBarrier}%</span>
+                            <span>Marketing: {item.marketingPct}%</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null;
+                })()}
               </div>
             </div>
           </div>
