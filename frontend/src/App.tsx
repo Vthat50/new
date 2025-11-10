@@ -17,6 +17,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { LandingPage } from './components/landing';
 import Dashboard from './components/Dashboard';
 import ErrorBoundary from './components/ErrorBoundary';
+import SignIn from './components/auth/SignIn';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
@@ -53,7 +55,15 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/dashboard/*" element={<Dashboard />} />
+          <Route path="/signin" element={<SignIn />} />
+          <Route
+            path="/dashboard/*"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>

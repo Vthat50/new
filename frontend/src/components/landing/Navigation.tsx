@@ -42,7 +42,7 @@ export default function Navigation() {
             </a>
           </div>
 
-          <Link to="/dashboard">
+          <Link to="/signin">
             <button className="px-5 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-all duration-200 shadow-sm hover:shadow-md">
               Dashboard
             </button>
