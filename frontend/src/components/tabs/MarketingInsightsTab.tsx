@@ -1464,35 +1464,77 @@ Return ONLY a JSON object in this exact format:
                 </p>
                 <div className="space-y-2">
                   {(() => {
-                    const topBarrier = barrierData[0];
-                    const secondBarrier = barrierData[1];
-                    const thirdBarrier = barrierData[2];
                     const topMarketing = marketingFocus.sort((a, b) => b.percentage - a.percentage)[0];
-                    const barrierName = topBarrier?.name || 'patient concerns';
                     const marketingName = topMarketing?.topic || 'marketing content';
 
-                    // Find marketing coverage for top barriers
-                    const topBarrierCoverage = gapData.find(g =>
-                      g.category.toLowerCase().includes(barrierName.toLowerCase().split(' ')[0])
-                    );
+                    // Find biggest underserved gaps (patient need > marketing coverage)
+                    const underservedGaps = gapData
+                      .filter(g => g.gap < -5) // Negative gap = underserved
+                      .sort((a, b) => a.gap - b.gap) // Most negative first
+                      .slice(0, 3);
+
+                    // Find over-emphasized areas (marketing > patient need)
+                    const overEmphasized = gapData
+                      .filter(g => g.gap > 10) // Positive gap = over-emphasized
+                      .sort((a, b) => b.gap - a.gap) // Most positive first
+                      .slice(0, 2);
+
+                    if (underservedGaps.length === 0 && overEmphasized.length === 0) {
+                      return (
+                        <p className="text-sm" style={{ color: enterpriseColors.neutral[700] }}>
+                          Your marketing content is well-aligned with patient needs! Continue monitoring for changes.
+                        </p>
+                      );
+                    }
 
                     return (
                       <>
                         <p className="text-sm" style={{ color: enterpriseColors.neutral[700] }}>
-                          <strong>Current Focus:</strong> Your marketing primarily emphasizes {marketingName.toLowerCase()} ({topMarketing?.percentage || 0}%),
-                          but this only addresses {topBarrier?.percentage || 0}% of patient concerns.
+                          <strong>Current Focus:</strong> Your marketing primarily emphasizes {marketingName.toLowerCase()} ({topMarketing?.percentage || 0}%).
                         </p>
-                        <p className="text-sm" style={{ color: enterpriseColors.neutral[700] }}>
-                          <strong>Top Patient Needs:</strong>
-                        </p>
-                        <ul className="text-sm space-y-1 ml-4" style={{ color: enterpriseColors.neutral[700] }}>
-                          <li>• <strong>{topBarrier?.name}</strong> - {topBarrier?.percentage}% of patients struggle with this</li>
-                          {secondBarrier && <li>• <strong>{secondBarrier.name}</strong> - {secondBarrier.percentage}% of patients</li>}
-                          {thirdBarrier && <li>• <strong>{thirdBarrier.name}</strong> - {thirdBarrier.percentage}% of patients</li>}
-                        </ul>
-                        <p className="text-sm font-semibold mt-3" style={{ color: enterpriseColors.primary[700] }}>
-                          Recommendation: Increase content about {barrierName.toLowerCase()}, {secondBarrier?.name.toLowerCase()},
-                          and {thirdBarrier?.name.toLowerCase()} to better align with what patients actually need help with.
+
+                        {underservedGaps.length > 0 && (
+                          <>
+                            <p className="text-sm font-semibold mt-3" style={{ color: enterpriseColors.danger[700] }}>
+                              Critical Gaps - Patients Need More Help With:
+                            </p>
+                            <ul className="text-sm space-y-1 ml-4" style={{ color: enterpriseColors.neutral[700] }}>
+                              {underservedGaps.map((gap, idx) => (
+                                <li key={idx}>
+                                  • <strong>{gap.category}</strong> - Patients: {gap.patient_barrier}%, Marketing: {gap.marketing}%
+                                  (Gap: {Math.abs(gap.gap)}%)
+                                </li>
+                              ))}
+                            </ul>
+                          </>
+                        )}
+
+                        {overEmphasized.length > 0 && (
+                          <>
+                            <p className="text-sm font-semibold mt-3" style={{ color: enterpriseColors.warning[700] }}>
+                              Over-Emphasized Topics - Consider Reducing:
+                            </p>
+                            <ul className="text-sm space-y-1 ml-4" style={{ color: enterpriseColors.neutral[700] }}>
+                              {overEmphasized.map((gap, idx) => (
+                                <li key={idx}>
+                                  • <strong>{gap.category}</strong> - Marketing: {gap.marketing}%, Patients: {gap.patient_barrier}%
+                                  (Over-emphasis: {gap.gap}%)
+                                </li>
+                              ))}
+                            </ul>
+                          </>
+                        )}
+
+                        <p className="text-sm font-semibold mt-3 p-3 rounded" style={{
+                          color: enterpriseColors.primary[700],
+                          backgroundColor: enterpriseColors.primary[50]
+                        }}>
+                          💡 Recommendation: {underservedGaps.length > 0
+                            ? `Focus on adding content about ${underservedGaps.map(g => g.category.toLowerCase()).join(', ')}. `
+                            : ''}
+                          {overEmphasized.length > 0
+                            ? `Reduce emphasis on ${overEmphasized.map(g => g.category.toLowerCase()).join(' and ')} to reallocate resources.`
+                            : ''}
                         </p>
                       </>
                     );
