@@ -3,6 +3,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import twilio from 'twilio';
 
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
@@ -30,7 +31,6 @@ Show this to your pharmacy to receive your discount. Questions? Reply to this me
 - Your Healthcare Team`;
 
   try {
-    const twilio = (await import('twilio')).default;
     const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
     let formattedNumber = phone_number;
