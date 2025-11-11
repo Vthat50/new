@@ -32,3 +32,6 @@ python-dateutil==2.8.2
 
 # Faker for mock data
 faker==22.0.0
+
+# Twilio for SMS
+twilio==9.0.4
