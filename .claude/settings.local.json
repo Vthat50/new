@@ -16,7 +16,8 @@
       "Bash(vercel ls)",
       "Bash(vercel link:*)",
       "WebFetch(domain:www.lillycares.com)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(vercel logs:*)"
     ],
     "deny": [],
     "ask": []
