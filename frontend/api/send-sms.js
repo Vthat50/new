@@ -1,17 +1,14 @@
 /**
  * Vercel Serverless Function for SMS
- * This deploys automatically with your frontend - no separate backend needed!
  */
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import twilio from 'twilio';
 
-// Twilio credentials - these will be set as Vercel environment variables
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER || '+1234567890';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req, res) {
   // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -46,7 +43,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       message_sid: twilioMessage.sid,
       status: twilioMessage.status,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('SMS Error:', error);
     return res.status(500).json({
       success: false,

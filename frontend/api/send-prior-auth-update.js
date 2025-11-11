@@ -2,14 +2,13 @@
  * Vercel Serverless Function - Send Prior Auth Update
  */
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import twilio from 'twilio';
 
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER || '+1234567890';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -61,7 +60,7 @@ Questions? Call ${TWILIO_PHONE_NUMBER}
       message: `Prior auth update sent to ${patient_name}`,
       message_sid: twilioMessage.sid,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('SMS Error:', error);
     return res.status(500).json({
       success: false,
