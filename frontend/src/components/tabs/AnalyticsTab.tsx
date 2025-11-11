@@ -195,15 +195,16 @@ export default function AnalyticsTab() {
         })}
       </div>
 
-      {/* Call Volume Trends */}
+      {/* Call Volume Heatmap and First Call Resolution - Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Call Volume Heatmap - Left Half */}
         <Card>
           <CardContent>
             <CallVolumeHeatmap data={callVolumeData} />
           </CardContent>
         </Card>
 
-        {/* First Call Resolution by Type */}
+        {/* First Call Resolution by Type - Right Half */}
         <Card>
           <CardHeader>
             <h3 className="text-neutral-900" style={{ fontSize: typography.fontSize.lg, fontWeight: typography.fontWeight.semibold }}>
