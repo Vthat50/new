@@ -30,7 +30,7 @@ Show this to your pharmacy to receive your discount. Questions? Reply to this me
 - Your Healthcare Team`;
 
   try {
-    const twilio = require('twilio');
+    const twilio = (await import('twilio')).default;
     const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
     let formattedNumber = phone_number;

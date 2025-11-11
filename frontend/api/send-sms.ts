@@ -24,7 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     // Import Twilio (this works in serverless functions)
-    const twilio = require('twilio');
+    const twilio = (await import('twilio')).default;
     const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
     // Format phone number to E.164

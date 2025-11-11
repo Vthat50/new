@@ -42,7 +42,7 @@ Questions? Call ${TWILIO_PHONE_NUMBER}
 - Your Healthcare Team`;
 
   try {
-    const twilio = require('twilio');
+    const twilio = (await import('twilio')).default;
     const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
     let formattedNumber = phone_number;
