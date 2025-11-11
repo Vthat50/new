@@ -32,6 +32,7 @@ import SavedLayouts from '../analytics/SavedLayouts';
 import ShareVisualization from '../analytics/ShareVisualization';
 import WidgetExport from '../analytics/WidgetExport';
 import WidgetLibrary from '../analytics/WidgetLibrary';
+import CallVolumeHeatmap from '../analytics/CallVolumeHeatmap';
 
 type TabType = 'performance' | 'friction' | 'geographic' | 'chatbot';
 
@@ -197,54 +198,8 @@ export default function AnalyticsTab() {
       {/* Call Volume Trends */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader>
-            <h3 className="text-neutral-900" style={{ fontSize: typography.fontSize.lg, fontWeight: typography.fontWeight.semibold }}>
-              Call Volume Trends (7 Days)
-            </h3>
-          </CardHeader>
           <CardContent>
-            <div className="flex items-end justify-between" style={{ height: '200px', gap: spacing[2] }}>
-              {callVolumeData.map((day, idx) => {
-                const maxValue = 200;
-                return (
-                  <div key={idx} className="flex flex-col items-center flex-1" style={{ gap: spacing[2] }}>
-                    <div className="w-full flex flex-col items-center" style={{ gap: spacing[1], height: '100%', justifyContent: 'flex-end' }}>
-                      <div
-                        className="w-full rounded-t"
-                        style={{
-                          height: `${(day.inbound / maxValue) * 100}%`,
-                          backgroundColor: colors.primary[400],
-                          minHeight: '8px',
-                        }}
-                        title={`Inbound: ${day.inbound}`}
-                      />
-                      <div
-                        className="w-full rounded-t"
-                        style={{
-                          height: `${(day.outbound / maxValue) * 100}%`,
-                          backgroundColor: colors.primary[200],
-                          minHeight: '8px',
-                        }}
-                        title={`Outbound: ${day.outbound}`}
-                      />
-                    </div>
-                    <div className="text-neutral-600" style={{ fontSize: typography.fontSize.xs }}>
-                      {day.day}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="flex items-center justify-center mt-4" style={{ gap: spacing[4] }}>
-              <div className="flex items-center" style={{ gap: spacing[2] }}>
-                <div style={{ width: '12px', height: '12px', backgroundColor: colors.primary[400], borderRadius: '2px' }} />
-                <span className="text-xs text-neutral-600">Inbound</span>
-              </div>
-              <div className="flex items-center" style={{ gap: spacing[2] }}>
-                <div style={{ width: '12px', height: '12px', backgroundColor: colors.primary[200], borderRadius: '2px' }} />
-                <span className="text-xs text-neutral-600">Outbound</span>
-              </div>
-            </div>
+            <CallVolumeHeatmap data={callVolumeData} />
           </CardContent>
         </Card>
 
