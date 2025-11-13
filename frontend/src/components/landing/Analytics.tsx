@@ -1,4 +1,5 @@
 
+import React, { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import {
   LineChart,
@@ -13,6 +14,175 @@ import {
   Legend
 } from 'recharts'
 import Card from './Card'
+
+function HeatmapCard() {
+  const [hoveredCell, setHoveredCell] = useState<{ date: Date; hour: number; calls: number } | null>(null);
+
+  // Memoize data generation to prevent re-calculation on hover
+  const heatmapData = useMemo(() => {
+    const today = new Date();
+    const dates = [];
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      dates.push(date);
+    }
+
+    const hours = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22];
+
+    const getCallCount = (hour: number, dayOfWeek: number): number => {
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+      if (isWeekend) {
+        if (hour >= 10 && hour <= 16) return Math.floor(Math.random() * 8) + 2;
+        if (hour >= 9 && hour <= 18) return Math.floor(Math.random() * 4);
+        return Math.floor(Math.random() * 2);
+      } else {
+        if (hour >= 8 && hour <= 10) return Math.floor(Math.random() * 20) + 15;
+        if (hour >= 11 && hour <= 14) return Math.floor(Math.random() * 25) + 20;
+        if (hour >= 15 && hour <= 17) return Math.floor(Math.random() * 18) + 12;
+        if (hour >= 18 && hour <= 21) return Math.floor(Math.random() * 12) + 5;
+        if (hour >= 6 && hour <= 22) return Math.floor(Math.random() * 6);
+        return Math.floor(Math.random() * 3);
+      }
+    };
+
+    // Generate all call counts once
+    const callData: Record<string, number> = {};
+    dates.forEach(date => {
+      hours.forEach(hour => {
+        const key = `${date.toDateString()}-${hour}`;
+        callData[key] = getCallCount(hour, date.getDay());
+      });
+    });
+
+    return { dates, hours, callData };
+  }, []);
+
+  const getHeatColor = (calls: number): string => {
+    if (calls === 0) return '#ebedf0';
+    const maxCalls = 45;
+    const intensity = calls / maxCalls;
+
+    if (intensity > 0.75) return '#0e4429';
+    if (intensity > 0.5) return '#006d32';
+    if (intensity > 0.25) return '#26a641';
+    return '#39d353';
+  };
+
+  const formatDate = (date: Date) => `${date.getMonth() + 1}/${date.getDate()}`;
+  const formatHour = (hour: number) => {
+    if (hour === 12) return '12p';
+    if (hour < 12) return `${hour}a`;
+    return `${hour - 12}p`;
+  };
+
+  const { dates, hours, callData } = heatmapData;
+
+  return (
+    <Card className="p-6">
+      <h3 className="text-lg font-bold text-gray-900 mb-4">Monthly Call Volume</h3>
+      <div style={{ height: '300px', overflowX: 'auto', overflowY: 'hidden', position: 'relative' }}>
+        <div style={{ display: 'flex', gap: '8px', height: '100%' }}>
+          {/* Hour labels */}
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-around', paddingTop: '35px', paddingBottom: '5px' }}>
+            {hours.filter((_, idx) => idx % 2 === 0).map(hour => (
+              <div key={hour} style={{ fontSize: '10px', color: '#666', textAlign: 'right', minWidth: '24px' }}>
+                {formatHour(hour)}
+              </div>
+            ))}
+          </div>
+
+          {/* Heatmap grid */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            {/* Date labels */}
+            <div style={{ display: 'flex', gap: '3px', marginBottom: '4px', height: '30px' }}>
+              {dates.map((date, idx) => (
+                <div key={idx} style={{ width: '12px', fontSize: '9px', color: '#666', textAlign: 'center' }}>
+                  {idx % 5 === 0 ? formatDate(date).split('/')[1] : ''}
+                </div>
+              ))}
+            </div>
+
+            {/* Day labels */}
+            <div style={{ display: 'flex', gap: '3px', marginBottom: '2px' }}>
+              {dates.map((date, idx) => (
+                <div key={idx} style={{ width: '12px', fontSize: '8px', color: '#999', textAlign: 'center', fontWeight: date.getDay() === 1 ? 'bold' : 'normal' }}>
+                  {date.getDay() === 1 ? 'M' : date.getDay() === 3 ? 'W' : date.getDay() === 5 ? 'F' : ''}
+                </div>
+              ))}
+            </div>
+
+            {/* Grid */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-around' }}>
+              {hours.map(hour => (
+                <div key={hour} style={{ display: 'flex', gap: '3px' }}>
+                  {dates.map((date, idx) => {
+                    const key = `${date.toDateString()}-${hour}`;
+                    const calls = callData[key];
+                    const isHovered = hoveredCell?.date.toDateString() === date.toDateString() && hoveredCell?.hour === hour;
+
+                    return (
+                      <div
+                        key={idx}
+                        onMouseEnter={() => setHoveredCell({ date, hour, calls })}
+                        onMouseLeave={() => setHoveredCell(null)}
+                        style={{
+                          width: '12px',
+                          height: '12px',
+                          backgroundColor: getHeatColor(calls),
+                          borderRadius: '2px',
+                          border: '1px solid rgba(0,0,0,0.05)',
+                          boxShadow: isHovered ? '0 0 0 2px #333' : 'none',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s',
+                          position: 'relative',
+                          zIndex: isHovered ? 10 : 1,
+                          opacity: isHovered ? 1 : 0.95
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+
+            {/* Tooltip */}
+            {hoveredCell && (
+              <div style={{
+                position: 'absolute',
+                bottom: '10px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                padding: '6px 12px',
+                backgroundColor: '#333',
+                color: 'white',
+                borderRadius: '6px',
+                fontSize: '11px',
+                whiteSpace: 'nowrap',
+                pointerEvents: 'none',
+                zIndex: 1000,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+              }}>
+                <span style={{ fontWeight: 'bold' }}>
+                  {hoveredCell.calls} call{hoveredCell.calls !== 1 ? 's' : ''}
+                </span>
+                {' • '}
+                <span style={{ opacity: 0.9 }}>
+                  {hoveredCell.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} {formatHour(hoveredCell.hour)}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="mt-4 p-4 bg-primary/10 rounded-lg">
+        <div className="text-2xl font-bold text-primary mb-1">1,847 calls</div>
+        <div className="text-sm text-gray-700">This week • 94% AI resolution rate</div>
+      </div>
+    </Card>
+  );
+}
 
 export default function Analytics() {
   const adherenceData = [
@@ -41,7 +211,7 @@ export default function Analytics() {
   ]
 
   return (
-    <section id="analytics" className="py-20 px-6 bg-gray-50">
+    <section id="analytics" className="py-20 px-6 bg-white">
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -111,37 +281,14 @@ export default function Analytics() {
             </Card>
           </motion.div>
 
-          {/* Call Volume */}
+          {/* Call Volume Heatmap */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <Card className="p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Weekly Call Volume</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={callVolumeData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E5E5" />
-                  <XAxis dataKey="day" stroke="#666666" />
-                  <YAxis stroke="#666666" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#FFFFFF',
-                      border: '1px solid #E5E5E5',
-                      borderRadius: '6px'
-                    }}
-                  />
-                  <Legend />
-                  <Bar dataKey="outbound" fill="#2563EB" radius={[4, 4, 0, 0]} name="Outbound" />
-                  <Bar dataKey="inbound" fill="#10B981" radius={[4, 4, 0, 0]} name="Inbound" />
-                </BarChart>
-              </ResponsiveContainer>
-              <div className="mt-4 p-4 bg-primary/10 rounded-lg">
-                <div className="text-2xl font-bold text-primary mb-1">1,847 calls</div>
-                <div className="text-sm text-gray-700">This week • 94% AI resolution rate</div>
-              </div>
-            </Card>
+            <HeatmapCard />
           </motion.div>
         </div>
 

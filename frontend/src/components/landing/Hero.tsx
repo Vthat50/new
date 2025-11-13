@@ -1,10 +1,13 @@
 
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Phone, MessageSquare, Shield, Sparkles } from 'lucide-react'
 import Button from './Button'
+import VoiceAgent from './VoiceAgent'
 
 // Hero section component
 export default function Hero() {
+  const [showDemo, setShowDemo] = useState(false)
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
@@ -37,12 +40,18 @@ export default function Hero() {
             </p>
 
             <div className="flex flex-wrap gap-4 mb-12">
-              <Button size="lg" className="shadow-lg shadow-primary/20">
-                See How It Works
+              <Button
+                size="lg"
+                className="shadow-lg shadow-primary/20"
+                onClick={() => setShowDemo(!showDemo)}
+              >
+                {showDemo ? 'Show Overview' : 'See How It Works'}
               </Button>
-              <Button variant="outline" size="lg">
-                Book a Demo
-              </Button>
+              <a href="https://calendly.com/vedantagrawal752/vevara-introduction" target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="lg">
+                  Book a Demo
+                </Button>
+              </a>
             </div>
 
             {/* Trust indicators */}
@@ -66,17 +75,25 @@ export default function Hero() {
             </div>
           </motion.div>
 
-          {/* Right visual - cleaner, more minimal */}
+          {/* Right visual - conditional rendering */}
           <motion.div
+            key={showDemo ? 'demo' : 'overview'}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.5 }}
             className="relative"
+            style={{ height: '600px', display: 'flex', alignItems: 'center' }}
           >
-            {/* Main card */}
-            <div className="relative bg-white rounded-3xl shadow-xl p-8 border border-gray-200/60 backdrop-blur">
+            {showDemo ? (
+              /* Voice Agent Demo */
+              <VoiceAgent />
+            ) : (
+              <div style={{ position: 'relative', width: '100%' }}>
+                {/* Main card */}
+                <div className="relative bg-white rounded-3xl shadow-xl p-8 border border-gray-200/60 backdrop-blur" style={{ height: '600px', display: 'flex', flexDirection: 'column' }}>
               {/* Header */}
-              <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-lg shadow-primary/25">
                     <Phone className="w-6 h-6 text-white" />
@@ -95,7 +112,7 @@ export default function Hero() {
               </div>
 
               {/* Conversation */}
-              <div className="space-y-4 mb-6">
+              <div className="space-y-4 flex-1 overflow-y-auto">
                 <div className="flex gap-2">
                   <div className="bg-gray-50 rounded-2xl rounded-tl-md px-4 py-3 max-w-[85%]">
                     <p className="text-sm text-gray-800 leading-relaxed">
@@ -119,10 +136,34 @@ export default function Hero() {
                     </p>
                   </div>
                 </div>
+
+                <div className="flex gap-2 justify-end">
+                  <div className="bg-primary/10 rounded-2xl rounded-tr-md px-4 py-3 max-w-[85%]">
+                    <p className="text-sm text-gray-800 leading-relaxed">
+                      Should I take it before or after eating?
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <div className="bg-gray-50 rounded-2xl rounded-tl-md px-4 py-3 max-w-[85%]">
+                    <p className="text-sm text-gray-800 leading-relaxed">
+                      Take it 30 minutes before breakfast for best absorption. I can also set a reminder for you.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 justify-end">
+                  <div className="bg-primary/10 rounded-2xl rounded-tr-md px-4 py-3 max-w-[85%]">
+                    <p className="text-sm text-gray-800 leading-relaxed">
+                      That would be great, thanks!
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Quick actions */}
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-6">
                 <button className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all text-sm font-medium text-gray-700">
                   <MessageSquare className="w-4 h-4" />
                   Transfer to Agent
@@ -133,7 +174,7 @@ export default function Hero() {
               </div>
 
               {/* Floating badge */}
-              <div className="absolute -top-3 -right-3 bg-white border border-success/20 text-success px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
+              <div className="absolute -top-3 -right-3 bg-white border border-success/20 text-success px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 z-10">
                 <Shield className="w-3.5 h-3.5" />
                 <span className="text-xs font-semibold">Compliant</span>
               </div>
@@ -144,7 +185,7 @@ export default function Hero() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="absolute -left-6 top-1/4 bg-white rounded-2xl shadow-lg border border-gray-200/60 p-4 backdrop-blur"
+              className="absolute -left-6 top-[150px] bg-white rounded-2xl shadow-lg border border-gray-200/60 p-4 backdrop-blur z-10"
             >
               <div className="text-2xl font-bold text-gray-900">98%</div>
               <div className="text-xs text-gray-600 mt-1">Adherence Rate</div>
@@ -154,7 +195,7 @@ export default function Hero() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
-              className="absolute -right-6 bottom-1/4 bg-white rounded-2xl shadow-lg border border-gray-200/60 p-4 backdrop-blur"
+              className="absolute -right-6 bottom-[150px] bg-white rounded-2xl shadow-lg border border-gray-200/60 p-4 backdrop-blur z-10"
             >
               <div className="text-2xl font-bold text-gray-900">&lt;2s</div>
               <div className="text-xs text-gray-600 mt-1">Response Time</div>
@@ -162,6 +203,8 @@ export default function Hero() {
 
             {/* Subtle glow effects */}
             <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-purple-500/5 rounded-3xl blur-3xl -z-10" />
+              </div>
+            )}
           </motion.div>
         </div>
       </div>

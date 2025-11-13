@@ -35,9 +35,9 @@ export default function Navigation() {
               Platform
             </a>
             <a href="#analytics" className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
-              Resources
+              Analytics
             </a>
-            <a href="#contact" className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
+            <a href="https://calendly.com/vedantagrawal752/vevara-introduction" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
               Pricing
             </a>
           </div>

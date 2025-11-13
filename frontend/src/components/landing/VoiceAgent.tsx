@@ -120,7 +120,8 @@ export default function VoiceAgent() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6, delay: 0.3 }}
-        className="bg-white rounded-2xl p-8 shadow-lg"
+        className="bg-white rounded-2xl p-6 shadow-lg"
+        style={{ height: '600px', display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden' }}
       >
         {isCallActive ? (
           /* Call Active State */
@@ -148,24 +149,24 @@ export default function VoiceAgent() {
           /* Initial State - Show Challenge and Start Call Button */
           <>
             {/* Challenge Section */}
-            <div className="bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl p-8 mb-8">
-              <h3 className="text-2xl font-bold text-white text-center mb-4">
+            <div className="bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl p-6">
+              <h3 className="text-xl font-bold text-white text-center mb-3">
                 "Try to Break Our AI" Challenge
               </h3>
-              <p className="text-white/90 text-center mb-8">
+              <p className="text-white/90 text-center mb-5 text-sm">
                 See if you can stump our AI. Try these challenges during your call:
               </p>
 
-              <div className="grid md:grid-cols-2 gap-4 mb-8">
+              <div className="grid md:grid-cols-2 gap-3 mb-5">
                 {challenges.slice(0, 4).map((challenge) => (
                   <div
                     key={challenge.number}
-                    className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6"
+                    className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4"
                   >
-                    <h4 className="text-lg font-semibold text-white mb-2">
+                    <h4 className="text-base font-semibold text-white mb-1">
                       {challenge.title}
                     </h4>
-                    <p className="text-white/90">
+                    <p className="text-white/90 text-sm">
                       {challenge.description}
                     </p>
                   </div>
@@ -173,27 +174,27 @@ export default function VoiceAgent() {
               </div>
 
               {/* Challenge 5 centered */}
-              <div className="max-w-md mx-auto">
-                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6">
-                  <h4 className="text-lg font-semibold text-white mb-2">
+              <div className="max-w-md mx-auto mb-5">
+                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4">
+                  <h4 className="text-base font-semibold text-white mb-1">
                     Challenge 5
                   </h4>
-                  <p className="text-white/90">
+                  <p className="text-white/90 text-sm">
                     Act confused about the trial purpose
                   </p>
                 </div>
               </div>
-            </div>
 
-            {/* Start Call Button */}
-            <div className="flex justify-center">
-              <button
-                onClick={() => setShowForm(true)}
-                className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
-                <Phone className="w-5 h-5" />
-                Start Call
-              </button>
+              {/* Start Call Button */}
+              <div className="flex justify-center">
+                <button
+                  onClick={() => setShowForm(true)}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  <Phone className="w-5 h-5" />
+                  Start Call
+                </button>
+              </div>
             </div>
           </>
         ) : (
