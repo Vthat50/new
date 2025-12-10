@@ -32,5 +32,8 @@ python-dateutil==2.8.2
 # Faker for mock data
 faker==22.0.0
 
+# OpenAI for AI analysis
+openai==1.12.0
+
 # Serverless adapter for FastAPI
 mangum==0.17.0

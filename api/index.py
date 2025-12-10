@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.routes import patients, calls, analytics, integrations
+from app.api import triggers, marketing, outcomes
 
 app = FastAPI(
     title="Voice AI Healthcare Platform",
@@ -29,6 +30,9 @@ app.include_router(patients.router)
 app.include_router(calls.router)
 app.include_router(analytics.router)
 app.include_router(integrations.router)
+app.include_router(triggers.router, prefix="/api/triggers", tags=["Triggers"])
+app.include_router(marketing.router, prefix="/api/marketing", tags=["Marketing"])
+app.include_router(outcomes.router, prefix="/api/outcomes", tags=["Outcomes"])
 
 
 @app.get("/")

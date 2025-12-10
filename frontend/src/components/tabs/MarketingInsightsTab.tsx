@@ -15,7 +15,6 @@ import {
   Globe,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
-import OpenAI from 'openai';
 
 // Enterprise Design System
 const enterpriseColors = {
@@ -304,100 +303,31 @@ export default function MarketingInsightsTab() {
       setProcessingMessage('Running AI analysis on marketing content...');
       setProcessingProgress(40);
 
-      // Initialize OpenAI
-      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-
-      if (!apiKey) {
-        throw new Error('OpenAI API key is not configured. Please add VITE_OPENAI_API_KEY to environment variables.');
-      }
-
-      const openai = new OpenAI({
-        apiKey: apiKey,
-        dangerouslyAllowBrowser: true // Note: In production, use a backend proxy
-      });
-
-      // Define patient barriers from demo data - these are the categories we want OpenAI to analyze
-      const patientBarriers = [
-        { name: 'Cost & Insurance Support', keywords: 'affordability, cost, pricing, insurance, copay, financial assistance, patient assistance programs' },
-        { name: 'Injection Support & Training', keywords: 'injection, self-administration, needle anxiety, injection training, how to inject' },
-        { name: 'Side Effects Management', keywords: 'side effects, adverse events, safety, tolerability, what to expect' },
-        { name: 'Access & Logistics', keywords: 'access, availability, delivery, logistics, pharmacy, specialty pharmacy' },
-        { name: 'Efficacy & Clinical Results', keywords: 'efficacy, effectiveness, clinical trials, results, outcomes, benefits' },
-        { name: 'Dosing & Convenience', keywords: 'dosing, dosing schedule, convenience, frequency, administration' }
-      ];
-
-      const prompt = `You are analyzing pharmaceutical website content. Determine what percentage of the content focuses on each category below.
-
-CRITICAL INSTRUCTIONS:
-1. Read the website content VERY carefully
-2. The percentages MUST add up to approximately 100%
-3. If a category is not mentioned AT ALL, use 0%
-4. Be REALISTIC - don't inflate numbers
-
-CATEGORIES TO ANALYZE:
-
-1. Cost & Insurance Support (${patientBarriers[0].keywords})
-   - Look for: patient assistance programs, copay cards, financial help, eligibility for assistance, affordability programs, insurance coverage, cost reduction, "cares" programs, application for financial aid
-   - If the website is primarily about applying for financial assistance or a patient assistance program, this should be 80-90%
-
-2. Injection Support & Training (${patientBarriers[1].keywords})
-   - Look for: how to inject, injection techniques, self-administration guides, overcoming fear of needles, injection tutorials
-
-3. Side Effects Management (${patientBarriers[2].keywords})
-   - Look for: managing side effects, what to expect, adverse events, safety information, dealing with reactions
-
-4. Access & Logistics (${patientBarriers[3].keywords})
-   - Look for: where to get medication, pharmacy information, delivery, prescription fulfillment
-
-5. Efficacy & Clinical Results (${patientBarriers[4].keywords})
-   - Look for: how well the drug works, clinical trial data, effectiveness, treatment outcomes, scientific evidence
-
-6. Dosing & Convenience (${patientBarriers[5].keywords})
-   - Look for: how often to take/inject, dosing schedule, treatment regimen
-
-WEBSITE CONTENT TO ANALYZE:
-${websiteContents.join('\n\n---\n\n')}
-
-EXAMPLES:
-- If website is a patient assistance program (e.g., "LillyCares", "JanssenCares"), use ~85% Cost Support
-- If website is about clinical trials/efficacy, use ~60-70% Efficacy
-- If website is an injection training portal, use ~70-80% Injection Support
-
-Return ONLY valid JSON (no other text):
-{
-  "topics": [
-    {"name": "Cost & Insurance Support", "percentage": 85},
-    {"name": "Injection Support & Training", "percentage": 0},
-    {"name": "Side Effects Management", "percentage": 5},
-    {"name": "Access & Logistics", "percentage": 10},
-    {"name": "Efficacy & Clinical Results", "percentage": 0},
-    {"name": "Dosing & Convenience", "percentage": 0}
-  ],
-  "total_words": ${totalWords}
-}`;
+      // Get backend API URL
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
       setProcessingProgress(60);
 
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: "You are a marketing analyst that helps pharmaceutical companies understand how well their marketing aligns with patient needs. Always respond with valid JSON only."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        response_format: { type: "json_object" }
+      // Call backend endpoint instead of OpenAI directly
+      const response = await fetch(`${apiUrl}/api/marketing/analyze-marketing-content`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          website_contents: websiteContents,
+          total_words: totalWords
+        })
       });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+        throw new Error(errorData.detail || `Backend error: ${response.status}`);
+      }
 
       setProcessingProgress(80);
 
-      const text = completion.choices[0].message.content || '{}';
-      const analysisData = JSON.parse(text);
+      const analysisData = await response.json();
 
       console.log('✅ OpenAI Analysis Complete - Website Analyzed:');
       console.log('Topics from OpenAI:', analysisData.topics);
@@ -571,12 +501,16 @@ Return ONLY valid JSON (no other text):
 
       let errorMessage = 'Error analyzing websites.';
 
-      if (error.message?.includes('Invalid API Key') || error.message?.includes('Incorrect API key')) {
-        errorMessage = 'Invalid OpenAI API key. Please check:\n\n1. Go to https://platform.openai.com/api-keys\n2. Create or verify your API key\n3. Update VITE_OPENAI_API_KEY in Vercel environment variables\n4. Redeploy the application';
-      } else if (error.message?.includes('not configured')) {
-        errorMessage = 'OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to environment variables.';
+      if (error.message?.includes('OpenAI API key not configured')) {
+        errorMessage = 'OpenAI API key not configured on the backend. Please check:\n\n1. Verify OPENAI_API_KEY is set in backend/.env\n2. Restart the backend server\n3. Contact your administrator if the issue persists';
+      } else if (error.message?.includes('Backend error')) {
+        errorMessage = `Backend error: ${error.message}\n\nPlease ensure the backend server is running and try again.`;
       } else if (error.message?.includes('All proxies failed')) {
         errorMessage = 'Could not fetch website content. The website may be blocking automated access.';
+      } else if (error.message?.includes('Failed to fetch')) {
+        errorMessage = 'Cannot connect to backend server. Please ensure:\n\n1. Backend server is running (npm run dev in backend folder)\n2. Backend is accessible at ' + (import.meta.env.VITE_API_URL || 'http://localhost:8000');
+      } else {
+        errorMessage = `Error: ${error.message || 'Unknown error occurred'}`;
       }
 
       alert(errorMessage);

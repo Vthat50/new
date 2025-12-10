@@ -35,3 +35,6 @@ faker==22.0.0
 
 # Twilio for SMS
 twilio==9.0.4
+
+# OpenAI for AI analysis
+openai==1.12.0
