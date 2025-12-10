@@ -303,13 +303,10 @@ export default function MarketingInsightsTab() {
       setProcessingMessage('Running AI analysis on marketing content...');
       setProcessingProgress(40);
 
-      // Get backend API URL
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-
       setProcessingProgress(60);
 
-      // Call backend endpoint instead of OpenAI directly
-      const response = await fetch(`${apiUrl}/api/marketing/analyze-marketing-content`, {
+      // Call Vercel serverless function (works in production!)
+      const response = await fetch('/api/analyze-marketing', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -321,8 +318,8 @@ export default function MarketingInsightsTab() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
-        throw new Error(errorData.detail || `Backend error: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `API error: ${response.status}`);
       }
 
       setProcessingProgress(80);
@@ -502,13 +499,11 @@ export default function MarketingInsightsTab() {
       let errorMessage = 'Error analyzing websites.';
 
       if (error.message?.includes('OpenAI API key not configured')) {
-        errorMessage = 'OpenAI API key not configured on the backend. Please check:\n\n1. Verify OPENAI_API_KEY is set in backend/.env\n2. Restart the backend server\n3. Contact your administrator if the issue persists';
-      } else if (error.message?.includes('Backend error')) {
-        errorMessage = `Backend error: ${error.message}\n\nPlease ensure the backend server is running and try again.`;
+        errorMessage = 'OpenAI API key not configured. Please:\n\n1. Add OPENAI_API_KEY to Vercel environment variables\n2. Redeploy the application\n3. Contact your administrator if the issue persists';
       } else if (error.message?.includes('All proxies failed')) {
         errorMessage = 'Could not fetch website content. The website may be blocking automated access.';
       } else if (error.message?.includes('Failed to fetch')) {
-        errorMessage = 'Cannot connect to backend server. Please ensure:\n\n1. Backend server is running (npm run dev in backend folder)\n2. Backend is accessible at ' + (import.meta.env.VITE_API_URL || 'http://localhost:8000');
+        errorMessage = 'Cannot connect to API. Please check your internet connection and try again.';
       } else {
         errorMessage = `Error: ${error.message || 'Unknown error occurred'}`;
       }
