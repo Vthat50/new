@@ -50,33 +50,16 @@ export default function VoiceAgent() {
     setError('');
 
     try {
-      const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY;
-      const agentId = import.meta.env.VITE_ELEVENLABS_AGENT_ID;
-      const phoneNumberId = import.meta.env.VITE_ELEVENLABS_PHONE_NUMBER_ID;
+      console.log('Initiating call to:', phoneNumber);
 
-      if (!apiKey || !agentId || !phoneNumberId) {
-        throw new Error('Eleven Labs configuration is missing');
-      }
-
-      // Format phone number
-      let formattedNumber = phoneNumber.trim();
-      if (!formattedNumber.startsWith('+')) {
-        formattedNumber = '+1' + formattedNumber.replace(/\D/g, '');
-      }
-
-      console.log('Initiating call to:', formattedNumber);
-
-      // Call Eleven Labs API
-      const response = await fetch('https://api.elevenlabs.io/v1/convai/twilio/outbound-call', {
+      // Call our server-side API route (keeps API keys secure)
+      const response = await fetch('/api/initiate-call', {
         method: 'POST',
         headers: {
-          'xi-api-key': apiKey,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          agent_id: agentId,
-          agent_phone_number_id: phoneNumberId,
-          to_number: formattedNumber,
+          phoneNumber: phoneNumber,
           metadata: {
             age: age,
             gender: gender,
@@ -86,12 +69,12 @@ export default function VoiceAgent() {
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: { message: 'Failed to initiate call' } }));
-        throw new Error(errorData.detail?.message || `API Error: ${response.status}`);
+        throw new Error(data.error || `API Error: ${response.status}`);
       }
 
-      const data = await response.json();
       console.log('Call initiated successfully:', data);
 
       setIsCallActive(true);
