@@ -1,6 +1,7 @@
 from http.server import BaseHTTPRequestHandler
 import json
 import os
+import traceback
 from openai import OpenAI
 
 class handler(BaseHTTPRequestHandler):
@@ -134,6 +135,15 @@ Return ONLY valid JSON (no other text):
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
+            key = os.getenv('OPENAI_API_KEY') or ''
             self.wfile.write(json.dumps({
-                'error': f'Error analyzing content: {str(e)}'
+                'error': f'Error analyzing content: {str(e)}',
+                'exception_type': type(e).__name__,
+                'exception_module': type(e).__module__,
+                'cause': repr(e.__cause__) if e.__cause__ else None,
+                'traceback': traceback.format_exc(),
+                'key_present': bool(key),
+                'key_length': len(key),
+                'key_prefix': key[:7] if key else '',
+                'key_has_whitespace': key != key.strip() if key else False,
             }).encode())
