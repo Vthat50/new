@@ -23,8 +23,10 @@ class handler(BaseHTTPRequestHandler):
             website_contents = request_data.get('website_contents', [])
             total_words = request_data.get('total_words', 0)
 
-            # Get OpenAI API key from environment
-            api_key = os.getenv('OPENAI_API_KEY')
+            # Get OpenAI API key from environment.
+            # strip() guards against trailing newline/whitespace in the Vercel env var,
+            # which produces an invalid Authorization header and surfaces as APIConnectionError.
+            api_key = (os.getenv('OPENAI_API_KEY') or '').strip()
             if not api_key:
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json')
@@ -131,19 +133,13 @@ Return ONLY valid JSON (no other text):
             self.wfile.write(json.dumps(analysis_data).encode())
 
         except Exception as e:
+            # Log full traceback to Vercel function logs (server-side only — never in response body)
+            print(traceback.format_exc())
             self.send_response(500)
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            key = os.getenv('OPENAI_API_KEY') or ''
             self.wfile.write(json.dumps({
-                'error': f'Error analyzing content: {str(e)}',
+                'error': 'Error analyzing content',
                 'exception_type': type(e).__name__,
-                'exception_module': type(e).__module__,
-                'cause': repr(e.__cause__) if e.__cause__ else None,
-                'traceback': traceback.format_exc(),
-                'key_present': bool(key),
-                'key_length': len(key),
-                'key_prefix': key[:7] if key else '',
-                'key_has_whitespace': key != key.strip() if key else False,
             }).encode())
